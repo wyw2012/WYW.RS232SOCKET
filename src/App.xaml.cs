@@ -16,9 +16,20 @@ namespace WYW.RS232SOCKET
     /// </summary>
     public partial class App : Application
     {
+       
         protected override void OnStartup(StartupEventArgs e)
         {
-           
+            //AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            //{
+            //    Console.WriteLine($"**************{args.Name}");
+            //    string resourceName = $"WYW.RS232SOCKET.Lib.WYW.UI.dll";
+            //    using (var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            //    {
+            //        byte[] buffer = new byte[stream.Length];
+            //        stream.Read(buffer, 0, buffer.Length);
+            //        return Assembly.Load(buffer);
+            //    }
+            //};
             uint minResolution, maxResolution, currentResolution;
             WinAPI.NtQueryTimerResolution(out maxResolution, out minResolution, out currentResolution);
             if (currentResolution > 10000)//如果定时器最小分辨率大于1ms

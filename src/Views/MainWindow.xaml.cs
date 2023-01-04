@@ -18,7 +18,7 @@ namespace WYW.RS232SOCKET.Views
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            Title = "RS232 & Socket调试助手 V1.0";
+            Title = "RS232 & Socket & Modbus调试助手 V1.0";
             if(SystemParameters.PrimaryScreenHeight<this.Height)
             {
                 this.Height = SystemParameters.WorkArea.Height;
