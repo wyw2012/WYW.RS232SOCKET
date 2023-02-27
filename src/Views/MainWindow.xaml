@@ -234,7 +234,7 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Column="0" Margin="10,5,0,5" Content="创  建" Command="{Binding CreateResiterCommand}" />
+                                <Button Grid.Column="0" Margin="10,5,0,5" Content="创  建" Command="{Binding CreateResiterCommand}"/>
                                 <Button Grid.Column="1" Margin="10,5,0,5" Content="清  屏" Command="{Binding ClearCommand}"/>
                                 <Button Grid.Column="2" Margin="10,5,0,5" Content="读寄存器" Command="{Binding ReadResiterCommand}" 
                                         IsEnabled="{Binding SendButtonEnabled}"
@@ -262,8 +262,7 @@
                             </DataGrid>
                         </TabItem>
                         <TabItem Header="数据视图" wyw:TabItemElement.HeaderHorizontalAlignment="Center">
-                            <ListBox Margin="-1"
-                             ItemsSource="{Binding DisplayItems}"/>
+                            <ListBox Margin="-1" ItemsSource="{Binding DisplayItems}"/>
                         </TabItem>
 
                     </TabControl>

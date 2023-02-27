@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ExtensionMethod.cs" />
+    <Compile Include="Common\ObservableCollectionEx.cs" />
     <Compile Include="Common\WinAPI.cs" />
     <Compile Include="Device\TransportLayer\UDPServer.cs" />
     <Compile Include="Device\TransportLayer\UDPClient.cs" />

@@ -15,6 +15,7 @@ using WYW.RS232SOCKET.Events;
 using System.Collections.ObjectModel;
 using MessageBoxImage = WYW.UI.Controls.MessageBoxImage;
 using WYW.UI.Controls;
+using WYW.RS232SOCKET.Common;
 
 namespace WYW.RS232SOCKET.ViewModels
 {
@@ -31,8 +32,9 @@ namespace WYW.RS232SOCKET.ViewModels
         {
             string hostName = Dns.GetHostName();
             var ip= Dns.GetHostAddresses(hostName).Where(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(x=>x.ToString()).ToArray();
-            IPList = new List<string>() { "127.0.0.1" };
+            IPList = new List<string>();
             IPList.AddRange(ip);
+            IPList.Add("127.0.0.1");
             InitCommand();
 
             if (IPList.Count > 0)
@@ -592,12 +594,11 @@ namespace WYW.RS232SOCKET.ViewModels
             }
         }
 
-        public ObservableCollection<Register> Registers { get; } = new ObservableCollection<Register>();
+        public ObservableCollectionEx<Register> Registers { get; } = new ObservableCollectionEx<Register>();
 
         #endregion
 
         #endregion
-
 
         #region 命令
         private void InitCommand()
@@ -802,7 +803,6 @@ namespace WYW.RS232SOCKET.ViewModels
             });
         }
         #endregion
-
 
         #region 事件
         private void Device_DeviceNotifyEvent(object sender, DeviceStautsChangedEventArgs e)
