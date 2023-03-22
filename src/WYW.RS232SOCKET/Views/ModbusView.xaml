@@ -1,0 +1,116 @@
+﻿<UserControl x:Class="WYW.RS232SOCKET.Views.ModbusView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WYW.RS232SOCKET"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:wyw="http://wangyanwei.com/ui"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:Name="userControl">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+        <GroupBox Header="寄存器配置">
+            <Grid>
+                <Grid >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBox Text="{Binding StartAddress}" 
+                                 wyw:TextBoxElement.Title="起始地址" 
+                                 wyw:TextBoxElement.TitleWidth="1.5*"/>
+                        <TextBox Text="{Binding EndAddress}"
+                                 wyw:TextBoxElement.Title="终止地址" 
+                                 wyw:TextBoxElement.TitleWidth="1.5*"/>
+                    </StackPanel>
+                  
+                    <Button Grid.Column="2"  Content="创建模板" Command="{Binding CreateRegisterCommand}"
+                            wyw:ButtonElement.CornerRadius="6"/>
+                    <Button Grid.Column="4"  Content="加载模板" Command="{Binding LoadTemplateCommand}"
+                            wyw:ButtonElement.CornerRadius="6"/>
+                    <Button Grid.Column="6"  Content="保存模板" Command="{Binding SaveTemplateCommand}"
+                            wyw:ButtonElement.CornerRadius="6"/>
+                    <Grid Grid.Column="8" Grid.ColumnSpan="5"
+                          Visibility="{Binding Path=Config.Modbus.ModbusType, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0"  Content="读寄存器" Command="{Binding ReadRegisterCommand}"
+                            wyw:ButtonElement.CornerRadius="6" 
+                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"/>
+                        <Button Grid.Column="2" Content="写寄存器"  Command="{Binding WriteRegisterCommand}"
+                            wyw:ButtonElement.CornerRadius="6" 
+                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"/>
+                        <Button Grid.Column="4" Content="停     止"  Command="{Binding StopSendCommand}"
+                            wyw:ButtonElement.CornerRadius="6" 
+                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"
+                            Visibility="{Binding Config.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+                    </Grid>
+                  
+                </Grid>
+            </Grid>
+
+        </GroupBox>
+        <Grid Grid.Row="1" Name="ProxyGrid"/>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Registers}"  Margin="0,10,0,0" SelectionUnit="Cell">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="" Width="0.5*"  Binding="{Binding IsChecked,UpdateSourceTrigger=PropertyChanged}" 
+                                        ElementStyle="{StaticResource DataGridCheckBoxEditStyle}"
+                                        EditingElementStyle="{StaticResource DataGridCheckBoxEditStyle}" 
+                                        Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
+                <DataGridTextColumn Width="*" Header="地址" Binding="{Binding Address}"/>
+                <DataGridTextColumn Width="*" Header="值" Binding="{Binding Value}"/>
+                <DataGridComboBoxColumn Header="值类型"  Width="*" 
+                                        ItemsSource="{Binding Source={StaticResource RegisterValueTypeCollection} }" 
+                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                                        SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}" />
+
+                <DataGridComboBoxColumn Header="属性"  Width="*" 
+                                        ItemsSource="{Binding Source={StaticResource RegisterWriteTypeCollection} }" 
+                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                                        SelectedItemBinding="{Binding WriteType,UpdateSourceTrigger=PropertyChanged}" 
+                                        Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
+
+                <DataGridTextColumn Width="4*" Header="描述" Binding="{Binding Description}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="2"  Margin="0,10,0,0">
+            <ListBox BorderThickness="0" ItemsSource="{Binding Config.Display.DisplayItems}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.ContextMenu>
+                    <ContextMenu >
+                        <MenuItem Header="复    制" Command="{Binding CopyTextCommand}" 
+                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ContextMenu}}}"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

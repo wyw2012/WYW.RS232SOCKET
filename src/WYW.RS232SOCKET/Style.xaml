@@ -1,0 +1,38 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:WYW.RS232SOCKET"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <ObjectDataProvider x:Key="RegisterValueTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:RegisterValueType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="RegisterWriteTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:RegisterWriteType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="CommunicationTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:CommunicationType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="ModbusTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:ModbusType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="ProtocolTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:ProtocolType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <x:Array x:Key="BaudRateColldection" Type="{x:Type sys:Int32}">
+        <sys:Int32>9600</sys:Int32>
+        <sys:Int32>19200</sys:Int32>
+        <sys:Int32>38400</sys:Int32>
+        <sys:Int32>57600</sys:Int32>
+        <sys:Int32>115200</sys:Int32>
+    </x:Array>
+
+</ResourceDictionary>

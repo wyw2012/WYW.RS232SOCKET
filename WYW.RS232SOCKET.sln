@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33122.133
+VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WYW.RS232SOCKET", "src\WYW.RS232SOCKET.csproj", "{33890FDE-EF05-4E29-863A-7B118D3EC79F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WYW.RS232SOCKET", "src\WYW.RS232SOCKET\WYW.RS232SOCKET.csproj", "{33890FDE-EF05-4E29-863A-7B118D3EC79F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WYW.Communication", "src\WYW.Communication\WYW.Communication.csproj", "{BA88564E-03AC-418B-A8D3-1E549BAAD587}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,11 +17,15 @@ Global
 		{33890FDE-EF05-4E29-863A-7B118D3EC79F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33890FDE-EF05-4E29-863A-7B118D3EC79F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33890FDE-EF05-4E29-863A-7B118D3EC79F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {6E0E3F0A-FB99-404E-920C-0587A1BF7DDD}
+		SolutionGuid = {63FDCBAA-9377-4AEC-9BA8-8FB81AF76DBE}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,54 @@
+﻿using WYW.Communication.Protocol;
+
+namespace WYW.Communication
+{
+    /// <summary>
+    /// 指令执行结果
+    /// </summary>
+    public class ExecutionResult
+    {
+        public ExecutionResult(bool isSuccess)
+        {
+            IsSuccess = isSuccess;
+        }
+        /// <summary>
+        /// 指令是否执行成功，如果接收到了应答，且应答内容复合要求，则为true，否则为false
+        /// </summary>
+        public bool IsSuccess { get; internal set; }
+        /// <summary>
+        /// 仅在IsSuccess=false时有效
+        /// </summary>
+        public string Message { get; internal set; }
+        /// <summary>
+        /// 接收到的应答值，仅在IsSuccess=true时有效
+        /// </summary>
+        public ProtocolBase Response { get; internal set; }
+
+        /// <summary>
+        /// 创建执行成功的对象
+        /// </summary>
+        /// <param name="response">应答的对象</param>
+        /// <returns></returns>
+        public static ExecutionResult Success(ProtocolBase response)
+        {
+            var result = new ExecutionResult(true)
+            {
+                Response = response,
+            };
+            return result;
+        }
+        /// <summary>
+        /// 创建执行失败的对象
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <returns></returns>
+        public static ExecutionResult Failed(string errorMessage=null)
+        {
+            var result = new ExecutionResult(false)
+            {
+                Message = errorMessage,
+            };
+            return result;
+        }
+    }
+}
