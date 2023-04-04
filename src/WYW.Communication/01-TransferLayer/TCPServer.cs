@@ -73,14 +73,14 @@ namespace WYW.Communication.TransferLayer
             {
                 clientSocket.Close();
                 clientSocket.Dispose();
-                IsEstablished= IsOpen = false;
-                OnStatusChanged("Socket Server已主动关闭。");
             }
             if (serverSocket != null)
             {
                 serverSocket.Close();
                 serverSocket.Dispose();
             }
+            IsEstablished = IsOpen = false;
+            OnStatusChanged("Socket Server已主动关闭。");
         }
 
         public override void Write(byte[] content)

@@ -65,9 +65,9 @@ namespace WYW.Communication.TransferLayer
             {
                 clientSocket.Close();
                 clientSocket.Dispose();
-                IsEstablished= IsOpen = false;
-                OnStatusChanged("Socket Client已主动关闭。");
             }
+            IsEstablished = IsOpen = false;              
+            OnStatusChanged("Socket Client已主动关闭。");
         }
 
         public override void Write(byte[] content)

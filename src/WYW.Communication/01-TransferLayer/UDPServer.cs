@@ -29,10 +29,7 @@ namespace WYW.Communication.TransferLayer
                 {
                     clientSocket_DataReceived();
                 });
-                if (LogEnabled)
-                {
-                    Logger.Debug($"UDP Server已开启。");
-                }
+                OnStatusChanged("UDP Server已开启。");
             }
         }
 
@@ -43,10 +40,10 @@ namespace WYW.Communication.TransferLayer
             if (serverSocket != null)
             {
                 serverSocket.Close();
-                IsEstablished= IsOpen = false;
-                OnStatusChanged("UDP Server已主动关闭。");
-            }
-        }
+            }             
+            IsEstablished = IsOpen = false;
+            OnStatusChanged("UDP Server已主动关闭。");
+        }              
 
         public override void Write(byte[] content)
         {

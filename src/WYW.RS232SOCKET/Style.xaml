@@ -27,7 +27,7 @@
             <x:Type Type="local:ProtocolType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
-    <x:Array x:Key="BaudRateColldection" Type="{x:Type sys:Int32}">
+    <x:Array x:Key="BaudRateCollection" Type="{x:Type sys:Int32}">
         <sys:Int32>9600</sys:Int32>
         <sys:Int32>19200</sys:Int32>
         <sys:Int32>38400</sys:Int32>

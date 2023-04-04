@@ -83,6 +83,12 @@ namespace WYW.RS232SOCKET.ViewModels
         }
         private void OpenFile()
         {
+            Config.Send.SendText = "";
+            // 命令执行在IsChecked之后，所以根据改变后的状态进行判断
+            if (!Config.Send.IsSendFile)
+            {
+                return;
+            }
 
             var ofd = new OpenFileDialog
             {
@@ -92,7 +98,11 @@ namespace WYW.RS232SOCKET.ViewModels
             };
             if (ofd.ShowDialog() == true)
             {
-                Config.Send.SendText = File.ReadAllText(ofd.FileName);
+                Config.Send.SendText = ofd.FileName;
+            }
+            else
+            {
+                Config.Send.IsSendFile = false;
             }
         }
         private void CopyText(object content)
@@ -126,7 +136,15 @@ namespace WYW.RS232SOCKET.ViewModels
                 throw new Exception("发送栏无数据。");
             }
             sendQueue.Clear();
-            var items = Config.Send.SendText.Split(Environment.NewLine.ToCharArray(), options: StringSplitOptions.RemoveEmptyEntries);
+            string[] items;
+            if (Config.Send.IsSendFile)
+            {
+                items = File.ReadAllLines(Config.Send.SendText);
+            }
+            else
+            {
+                items = Config.Send.SendText.Split(Environment.NewLine.ToCharArray(), options: StringSplitOptions.RemoveEmptyEntries);
+            }
 
             foreach (var item in items)
             {

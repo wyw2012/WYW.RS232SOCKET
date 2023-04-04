@@ -8,10 +8,16 @@ namespace WYW.Communication.TransferLayer
         #region 属性
         private bool isEstablished;
         private bool isOpen;
+        private bool logEnabled;
+
         /// <summary>
         /// 是否记录日志
         /// </summary>
-        public bool LogEnabled { get; set; }
+        public bool LogEnabled
+        {
+            get => logEnabled;
+            set => SetProperty(ref logEnabled, value);
+        }
 
         /// <summary>
         /// 通讯是否建立连接，这里只是传输层建立连接，应用层使用IsConnected
@@ -82,7 +88,7 @@ namespace WYW.Communication.TransferLayer
 #endif
             if (LogEnabled)
             {
-                Logger.Debug(e.ToString(), false);
+                Logger.WriteLine("Commucation",e.ToString());
             }
 
         }
@@ -95,7 +101,7 @@ namespace WYW.Communication.TransferLayer
 #endif
             if (LogEnabled)
             {
-                Logger.Debug(e.ToString(), false);
+                Logger.WriteLine("Commucation", e.ToString(), false);
             }
 
         }
@@ -108,7 +114,7 @@ namespace WYW.Communication.TransferLayer
 #endif
             if (LogEnabled)
             {
-                Logger.Debug(e.ToString(), false);
+                Logger.WriteLine("Commucation", e.ToString(), false);
             }
         }
         #endregion

@@ -61,7 +61,7 @@
                                     <ComboBox wyw:ComboBoxElement.Title="串口"  SelectedItem="{Binding Config.RS232.PortName}" 
                                               ItemsSource="{Binding Config.PortNames}"/>
                                     <ComboBox wyw:ComboBoxElement.Title="波特率" SelectedItem="{Binding Config.RS232.BaudRate}"
-                                              ItemsSource="{StaticResource BaudRateColldection}"/>
+                                              ItemsSource="{StaticResource BaudRateCollection}"/>
 
                                     <ComboBox wyw:ComboBoxElement.Title="数据位" Text="{Binding Config.RS232.DataBits}">
                                         <ComboBoxItem Content="5"/>
@@ -146,10 +146,17 @@
                                         <ComboBoxItem Content="Hex"/>
                                         <ComboBoxItem Content="UTF-8"/>
                                     </ComboBox>
-
                                     <TextBox  Text="{Binding Config.Display.MaxItemCount}" wyw:TextBoxElement.Title="最大显示行数"/>
-                                    <ToggleButton  Style="{StaticResource SwitchButtonStyle}" IsChecked="{Binding Client.LogEnabled}"
-                                                   wyw:ToggleButtonElement.Title="记录日志"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <ToggleButton  Grid.Column="0" Style="{StaticResource SwitchButtonStyle}" IsChecked="{Binding Client.LogEnabled}"
+                                                   Content="记录日志"/>
+                                        <ToggleButton Grid.Column="1"  Style="{StaticResource SwitchButtonStyle}" IsChecked="{Binding Config.Display.EnableDisplay}"
+                                                   Content="窗口显示"/>
+                                    </Grid>
                                 </StackPanel>
 
                             </GroupBox>
@@ -162,8 +169,21 @@
                                                   ItemsSource="{Binding Source={StaticResource ProtocolTypeCollection} }" />
                                         <TextBox  Text="{Binding Config.Send.CyclicInterval}" wyw:TextBoxElement.Title="发送间隔（ms）"
                                                   wyw:TextBoxElement.PopupHint="循环发送周期或者发送文件中的行间隔时间"/>
-                                        <ToggleButton  Style="{StaticResource SwitchButtonStyle}" IsChecked="{Binding Config.Send.IsCyclic}"
-                                                   wyw:ToggleButtonElement.Title="循环发送"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
+                                                Content="循环发送"
+                                                IsChecked="{Binding Config.Send.IsCyclic}"/>
+
+                                            <ToggleButton Grid.Column="1" Style="{StaticResource SwitchButtonStyle}" 
+                                                 Content="发送文件"
+                                                 IsChecked="{Binding Config.Send.IsSendFile}"
+                                                  Command="{Binding OpenFileCommand}"/>
+                                        </Grid>
+
                                     </StackPanel>
                                 </Grid>
 

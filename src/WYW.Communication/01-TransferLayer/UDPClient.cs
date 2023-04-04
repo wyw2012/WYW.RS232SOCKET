@@ -40,9 +40,9 @@ namespace WYW.Communication.TransferLayer
             if (clientSocket != null)
             {
                 clientSocket.Close();
-                IsEstablished= IsOpen = false;
-                OnStatusChanged("UDP Server已主动关闭。");
-            }
+            }            
+            IsEstablished= IsOpen = false;          
+            OnStatusChanged("UDP Server已主动关闭。");
         }
         public override void Write(byte[] content)
         {

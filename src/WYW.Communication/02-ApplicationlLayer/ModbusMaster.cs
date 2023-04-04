@@ -328,6 +328,7 @@ namespace WYW.Communication.ApplicationlLayer
         }
 
         #endregion
+
         #region 私有函数
         private ExecutionResult SendCommand(int slaveID, ModbusCommand cmd, byte[] content, int maxSendCount = 1, int responseTimeout = 200)
         {

@@ -148,16 +148,15 @@ namespace WYW.RS232SOCKET.ViewModels
             }
         }
 
-
-
         private void Close()
         {
             if (Device != null)
             {
                 try
                 {
+                    StopSend(); 
                     Device.Close();
-                    Device.ProtocolReceivedEvent -= Device_ProtocolReceivedEvent; ;
+                    Device.ProtocolReceivedEvent -= Device_ProtocolReceivedEvent;
                     Device.ProtocolTransmitedEvent -= Device_ProtocolTransmitedEvent;
                     Device.Dispose();
                     Device = null;
@@ -185,8 +184,6 @@ namespace WYW.RS232SOCKET.ViewModels
                     }
 
                     Config.Display.DisplayItems.Add($"[{e.CreateTime:HH:mm:ss.fff}] {e.Message}");
-
-
                 });
             }
         }
@@ -198,6 +195,8 @@ namespace WYW.RS232SOCKET.ViewModels
         private void Device_ProtocolTransmitedEvent(object sender, ProtocolBase obj)
         {
             Config.Status.TotalSended += obj.FullBytes.Length;
+            if (!Config.Display.EnableDisplay)
+                return;
             lock (displayLocker)
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -225,7 +224,8 @@ namespace WYW.RS232SOCKET.ViewModels
         private void Device_ProtocolReceivedEvent(object sender, ProtocolBase obj)
         {
             Config.Status.TotalReceived += obj.FullBytes.Length;
-
+            if (!Config.Display.EnableDisplay)
+                return;
             lock (displayLocker)
             {
                 Application.Current.Dispatcher.Invoke(() =>

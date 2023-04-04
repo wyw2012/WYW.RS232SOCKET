@@ -238,6 +238,18 @@ namespace WYW.RS232SOCKET.Models
             get => displayType;
             set => SetProperty(ref displayType, value);
         }
+
+        private bool enableDisplay=true;
+
+        /// <summary>
+        /// 启用串口显示
+        /// </summary>
+        public bool EnableDisplay
+        {
+            get => enableDisplay;
+            set => SetProperty(ref enableDisplay, value);
+        }
+
         public ObservableCollection<string> DisplayItems { get; } = new ObservableCollection<string>();
 
     }
@@ -283,6 +295,19 @@ namespace WYW.RS232SOCKET.Models
             get => protocolType;
             set => SetProperty(ref protocolType, value);
         }
+
+
+        private bool isSendFile;
+
+        /// <summary>
+        /// 如果发送文件，SendText显示发送文件的路径
+        /// </summary>
+        public bool IsSendFile
+        {
+            get => isSendFile;
+            set => SetProperty(ref isSendFile, value);
+        }
+
 
 
 

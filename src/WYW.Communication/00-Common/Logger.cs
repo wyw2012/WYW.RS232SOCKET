@@ -12,25 +12,16 @@ namespace WYW.Communication
 {
     class Logger
     {
-        public static void Debug(string content, bool withTimeStamp = false)
+        /// <summary>
+        /// 写日志
+        /// </summary>
+        /// <param name="folderPath">文件夹路径，相对路径</param>
+        /// <param name="content"></param>
+        /// <param name="withTimeStamp">是否自动加入时间戳</param>
+        public static void WriteLine(string folderPath, string content, bool withTimeStamp = false)
         {
-            Write("Log\\Debug", content, withTimeStamp);
-        }
-        public static void Error(string content, bool withTimeStamp = false)
-        {
-            Write("Log\\Error", content, withTimeStamp);
-        }
-        public static void Info(string content, bool withTimeStamp = false)
-        {
-            Write("Log\\Info", content, withTimeStamp);
-        }
-        public static void Exception(string content, bool withTimeStamp = false)
-        {
-            Write("Log\\Exception", content, withTimeStamp);
-        }
-        public static void Write(string folder, string content, bool withTimeStamp = false)
-        {
-            var writer = LogWritter.CreateInstance(folder);
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", folderPath);
+            var writer = LogWritter.CreateInstance(path);
             writer.WriteLine(content, withTimeStamp);
         }
     }
@@ -165,10 +156,7 @@ namespace WYW.Communication
                     }
                 }
             }
-
             return fileName;
         }
     }
-
-
 }

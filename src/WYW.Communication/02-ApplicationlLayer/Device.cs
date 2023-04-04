@@ -47,6 +47,8 @@ namespace WYW.Communication.ApplicationlLayer
 
         private bool isConnected;
         private bool logEnabled;
+        private bool isKeepHeartbeat;
+        private ProtocolBase heartbeatContent = null;
         /// <summary>
         /// 是否建立连接，如果有心跳，则利用心跳判断，如果无心跳，则以通讯建立连接为标志
         /// </summary>
@@ -55,18 +57,24 @@ namespace WYW.Communication.ApplicationlLayer
             get => isConnected;
             set => SetProperty(ref isConnected, value);
         }
+
         /// <summary>
         /// 是否保持心跳，如果为true，需要设置HeartbeatContent
         /// </summary>
-        public bool IsKeepHeartbeat { get; set; }
+        public bool IsKeepHeartbeat
+        {
+            get =>  isKeepHeartbeat;
+            set => SetProperty(ref  isKeepHeartbeat, value);
+        }
+
         /// <summary>
-        /// 仅在IsKeepHeartbeat=true时有效
+        /// 发送心跳的对象，仅在IsKeepHeartbeat=true时有效
         /// </summary>
-        public ProtocolBase HeartbeatContent { get; set; } = null;
-        /// <summary>
-        /// 最后一次接收到数据时间
-        /// </summary>
-        public DateTime LastReceiveTime { get; protected set; } = DateTime.MinValue;
+        public ProtocolBase HeartbeatContent
+        {
+            get => heartbeatContent;
+            set => SetProperty(ref heartbeatContent, value);
+        }
 
         /// <summary>
         /// 是否启用日志
@@ -80,6 +88,10 @@ namespace WYW.Communication.ApplicationlLayer
         /// 应用层协议类型
         /// </summary>
         public ProtocolType ProtocolType { get; protected set; }
+        /// <summary>
+        /// 最后一次接收到数据时间
+        /// </summary>
+        public DateTime LastReceiveTime { get; protected set; } = DateTime.MinValue;
         #endregion
 
         #region 事件
@@ -213,7 +225,7 @@ namespace WYW.Communication.ApplicationlLayer
             ProtocolReceivedEvent?.Invoke(this, e);
             if (LogEnabled)
             {
-                Logger.Debug($"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
+                Logger.WriteLine("Device",$"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
             }
         }
         protected virtual void OnDataTransmited(ProtocolBase e)
@@ -221,7 +233,7 @@ namespace WYW.Communication.ApplicationlLayer
             ProtocolTransmitedEvent?.Invoke(this, e);
             if (LogEnabled)
             {
-                Logger.Debug($"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
+                Logger.WriteLine("Device",$"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
             }
         }
         #endregion
