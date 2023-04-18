@@ -35,7 +35,11 @@
     public enum RegisterValueType
     {
         UInt16,
+        Int16,
         UInt32,
+        Int32,
+        UInt64,
+        Int64,
         Float,
         Double,
     }
@@ -44,4 +48,27 @@
         读写,
         只读,
     }
+    /// <summary>
+    /// 对齐方式
+    /// </summary>
+    public enum RegisterEndianType
+    {
+        /// <summary>
+        /// 高位在前，例如：4 3 2 1
+        /// </summary>
+        大端模式,
+        /// <summary>
+        /// 高位在后，例如：1 2 3 4
+        /// </summary>
+        小端模式,
+        /// <summary>
+        /// 2 1 4 3
+        /// </summary>
+        大端反转,
+        /// <summary>
+        ///  3 4 1 2
+        /// </summary>
+        小端反转
+    }
+
 }

@@ -165,21 +165,7 @@ namespace WYW.RS232SOCKET.ViewModels
                     int index = 0;
                     for (int i = 0; i < item.Count; i++)
                     {
-                        switch (item[i].ValueType)
-                        {
-                            case RegisterValueType.UInt16:
-                                item[i].Value = BigEndianBitConverter.ToInt16(fullBytes, index);
-                                break;
-                            case RegisterValueType.UInt32:
-                                item[i].Value = BigEndianBitConverter.ToInt32(fullBytes, index);
-                                break;
-                            case RegisterValueType.Float:
-                                item[i].Value = BigEndianBitConverter.ToSingle(fullBytes, index);
-                                break;
-                            case RegisterValueType.Double:
-                                item[i].Value = BigEndianBitConverter.ToDouble(fullBytes, index);
-                                break;
-                        }
+                        item[i].Value = item[i].GetValue(fullBytes,index);
                         index += (item[i].RegisterCount * 2);
                     }
                 }
@@ -232,7 +218,7 @@ namespace WYW.RS232SOCKET.ViewModels
                 List<byte> sendArray = new List<byte>();
                 foreach (var reg in item)
                 {
-                    sendArray.AddRange(reg.ToBytes());
+                    sendArray.AddRange(reg.GetBytes());
                 }
                 result = master.WriteHoldingRegisters(Config.Modbus.SlaveID, (UInt16)item.Min(x => x.Address), sendArray.ToArray(), responseTimeout: Config.Modbus.ResponseTimeout);
                 if (!result)
@@ -305,6 +291,7 @@ namespace WYW.RS232SOCKET.ViewModels
             for (int i = 0; i < Registers.Count; i++)
             {
                 if (Registers[i].ValueType == RegisterValueType.UInt32 ||
+                    Registers[i].ValueType == RegisterValueType.Int32 ||
                     Registers[i].ValueType == RegisterValueType.Float)
                 {
                     if (Registers.Any(x => x.Address > Registers[i].Address &&
@@ -313,7 +300,9 @@ namespace WYW.RS232SOCKET.ViewModels
                         throw new Exception($"由于地址{Registers[i].Address}是{Registers[i].ValueType}类型，所以下一个地址需从{Registers[i].Address + 2}开始");
                     }
                 }
-                else if (Registers[i].ValueType == RegisterValueType.Double)
+                else if (Registers[i].ValueType == RegisterValueType.Double ||
+                    Registers[i].ValueType == RegisterValueType.Int64 ||
+                    Registers[i].ValueType == RegisterValueType.UInt64)
                 {
                     if (Registers.Any(x => x.Address > Registers[i].Address &&
                     x.Address < Registers[i].Address + 4))
@@ -358,12 +347,14 @@ namespace WYW.RS232SOCKET.ViewModels
                         register = Registers.SingleOrDefault(x => x.Address == startIndex + i);
                         if (register != null)
                         {
-                            content.AddRange(BigEndianBitConverter.GetBytes((UInt16)register.Value));
+                            content.AddRange(register.GetBytes());
+                            i = i - 1 + register.RegisterCount;
                         }
                         else
                         {
                             content.AddRange(BigEndianBitConverter.GetBytes((UInt16)0));
                         }
+                       
                     }
                     break;
                 case ModbusCommand.WriteOneHoldingRegister:
@@ -375,7 +366,7 @@ namespace WYW.RS232SOCKET.ViewModels
                     value = BigEndianBitConverter.ToUInt16(obj.Content, 2);
                     if (register != null)
                     {
-                        register.Value = value;
+                        register.Value = value.ToString();
                     }
                     else
                     {
@@ -389,11 +380,12 @@ namespace WYW.RS232SOCKET.ViewModels
                     content.AddRange(BigEndianBitConverter.GetBytes((UInt16)(count)));
                     for (int i = 0; i < count; i++)
                     {
+                        // TODO
                         register = Registers.SingleOrDefault(x => x.Address == startIndex + i);
                         value = BigEndianBitConverter.ToUInt16(obj.Content, i * 2 + 5);
                         if (register != null)
                         {
-                            register.Value = value;
+                            register.Value = value.ToString();
                         }
                         else
                         {
@@ -411,7 +403,8 @@ namespace WYW.RS232SOCKET.ViewModels
                         register = Registers.SingleOrDefault(x => x.Address == startIndex + i);
                         if (register != null)
                         {
-                            content.AddRange(BigEndianBitConverter.GetBytes((UInt16)register.Value));
+                            content.AddRange(register.GetBytes());
+                            i = i - 1 + register.RegisterCount;
                         }
                         else
                         {
@@ -427,7 +420,7 @@ namespace WYW.RS232SOCKET.ViewModels
                         value = BigEndianBitConverter.ToUInt16(obj.Content, i * 2 + 9);
                         if (register != null)
                         {
-                            register.Value = value;
+                            register.Value = value.ToString();
                         }
                         else
                         {

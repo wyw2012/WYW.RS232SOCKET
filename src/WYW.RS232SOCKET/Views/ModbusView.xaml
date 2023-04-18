@@ -81,20 +81,23 @@
                                         ElementStyle="{StaticResource DataGridCheckBoxEditStyle}"
                                         EditingElementStyle="{StaticResource DataGridCheckBoxEditStyle}" 
                                         Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
-                <DataGridTextColumn Width="*" Header="地址" Binding="{Binding Address}"/>
-                <DataGridTextColumn Width="*" Header="值" Binding="{Binding Value}"/>
-                <DataGridComboBoxColumn Header="值类型"  Width="*" 
-                                        ItemsSource="{Binding Source={StaticResource RegisterValueTypeCollection} }" 
-                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
-                                        SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}" />
-
-                <DataGridComboBoxColumn Header="属性"  Width="*" 
+                <DataGridTextColumn Width="0.7*" Header="地址" Binding="{Binding Address}"/>
+                <DataGridComboBoxColumn Header="属性"  Width="0.7*" 
                                         ItemsSource="{Binding Source={StaticResource RegisterWriteTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding WriteType,UpdateSourceTrigger=PropertyChanged}" 
                                         Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
 
-                <DataGridTextColumn Width="4*" Header="描述" Binding="{Binding Description}"/>
+                <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value}"/>
+                <DataGridComboBoxColumn Header="值类型"  Width="*" 
+                                        ItemsSource="{Binding Source={StaticResource RegisterValueTypeCollection} }" 
+                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                                        SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridComboBoxColumn Header="对齐"  Width="1.1*" 
+                                        ItemsSource="{Binding Source={StaticResource EndianTypeCollection} }" 
+                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                                        SelectedItemBinding="{Binding EndianType,UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTextColumn Width="5*" Header="描述" Binding="{Binding Description}"/>
             </DataGrid.Columns>
         </DataGrid>
         <Grid Grid.Row="2"  Margin="0,10,0,0">

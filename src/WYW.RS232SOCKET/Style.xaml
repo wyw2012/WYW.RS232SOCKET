@@ -27,6 +27,11 @@
             <x:Type Type="local:ProtocolType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+    <ObjectDataProvider x:Key="EndianTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:RegisterEndianType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
     <x:Array x:Key="BaudRateCollection" Type="{x:Type sys:Int32}">
         <sys:Int32>9600</sys:Int32>
         <sys:Int32>19200</sys:Int32>
