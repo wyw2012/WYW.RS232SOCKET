@@ -19,7 +19,7 @@ namespace WYW.Communication.Protocol
             Content = fullBytes;
             FriendlyText = fullBytes.ToHexString();
         }
-        internal static List<ProtocolBase> Analyse(List<byte> buffer)
+        public static List<ProtocolBase> Analyse(List<byte> buffer)
         {
             List<ProtocolBase> result = new List<ProtocolBase>();
             result.Add(new HexBare(buffer.ToArray()));

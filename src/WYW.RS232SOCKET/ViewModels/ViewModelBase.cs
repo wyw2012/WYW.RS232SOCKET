@@ -3,20 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using WYW.UI.Controls;
 
 namespace WYW.RS232SOCKET.ViewModels
 {
     internal class ViewModelBase:ObservableObject
     {
-        private bool isDisableUI;
+        public ViewModelBase()
+        {
+            BindingCommand();
+        }
+        private bool isRunning;
 
         /// <summary>
-        /// 是否禁用UI
+        /// 是否正在运行
         /// </summary>
-        public bool IsDisableUI
+        public bool IsRunning
         {
-            get => isDisableUI;
-            set => SetProperty(ref isDisableUI, value);
+            get => isRunning;
+            set => SetProperty(ref isRunning, value);
+        }
+        /// <summary>
+        /// 绑定指令与方法
+        /// </summary>
+        protected virtual void BindingCommand()
+        {
+
+        }
+        protected virtual void ProcessWhenTaskCompleted(Task task)
+        {
+            IsRunning = false;
+            if (task.Exception != null && task.Exception.InnerException != null)
+            {
+                MessageBoxWindow.Error(task.Exception.InnerException.Message);
+            }
         }
     }
 }

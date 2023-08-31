@@ -1,17 +1,26 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:WYW.RS232SOCKET"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
-    <ObjectDataProvider x:Key="RegisterValueTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-        <ObjectDataProvider.MethodParameters>
-            <x:Type Type="local:RegisterValueType"/>
-        </ObjectDataProvider.MethodParameters>
-    </ObjectDataProvider>
-    <ObjectDataProvider x:Key="RegisterWriteTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-        <ObjectDataProvider.MethodParameters>
-            <x:Type Type="local:RegisterWriteType"/>
-        </ObjectDataProvider.MethodParameters>
-    </ObjectDataProvider>
+                    xmlns:comm="clr-namespace:WYW.Communication;assembly=WYW.Communication"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:converter="clr-namespace:WYW.RS232SOCKET.Converters">
+    <Style x:Key="VirtualizedGridStyle" TargetType="{x:Type FrameworkElement}">
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsRunning}" Value="true">
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <BlurEffect Radius="6" />
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Opacity" Value="0.6"/>
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <converter:RegiseterValueCanEditConverter x:Key="RegiseterValueCanEditConverter"/>
+    <converter:RegiseterValueFormatConverter x:Key="RegiseterValueFormatConverter"/>
     <ObjectDataProvider x:Key="CommunicationTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
             <x:Type Type="local:CommunicationType"/>
@@ -19,17 +28,12 @@
     </ObjectDataProvider>
     <ObjectDataProvider x:Key="ModbusTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
-            <x:Type Type="local:ModbusType"/>
+            <x:Type Type="local:StationType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
     <ObjectDataProvider x:Key="ProtocolTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
             <x:Type Type="local:ProtocolType"/>
-        </ObjectDataProvider.MethodParameters>
-    </ObjectDataProvider>
-    <ObjectDataProvider x:Key="EndianTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-        <ObjectDataProvider.MethodParameters>
-            <x:Type Type="local:RegisterEndianType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
     <x:Array x:Key="BaudRateCollection" Type="{x:Type sys:Int32}">
@@ -39,5 +43,24 @@
         <sys:Int32>57600</sys:Int32>
         <sys:Int32>115200</sys:Int32>
     </x:Array>
-
+    <ObjectDataProvider x:Key="RegisterValueTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="comm:RegisterValueType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="RegisterWriteTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="comm:RegisterWriteType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="EndianTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="comm:RegisterEndianType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    <ObjectDataProvider x:Key="RegisterTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="comm:RegisterType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
 </ResourceDictionary>

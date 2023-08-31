@@ -1,0 +1,147 @@
+﻿<UserControl x:Class="WYW.RS232SOCKET.Views.ConfigView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WYW.RS232SOCKET.Views"
+             xmlns:wyw="http://wangyanwei.com/ui"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <ScrollViewer>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="1" Margin="0,20"  >
+                <StackPanel>
+                    <StackPanel DataContext="{Binding Controller}"
+                                IsEnabled="{Binding Device.Client.IsOpen,Converter={StaticResource ReverseConverter}}">
+                        <GroupBox Header="基本配置" Margin="0,0,0,20"   >
+                            <StackPanel Orientation="Vertical" >
+                                <ComboBox Grid.Column="1" wyw:ComboBoxElement.Title="通讯介质"
+                                  SelectedItem="{Binding CommunicationType}" 
+                                  ItemsSource="{Binding Source={StaticResource CommunicationTypeCollection} }"/>
+                                <ComboBox wyw:ComboBoxElement.Title="协议类型" 
+                                      SelectedIndex="{Binding ProtocolType}"
+                                      Visibility="{Binding CommunicationType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='RS232 TCPClient TCPServer'}">
+                                    <ComboBoxItem Content="None"/>
+                                    <ComboBoxItem Content="Modbus RTU"/>
+                                    <ComboBoxItem Content="Modbus TCP"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </GroupBox>
+                        <!--串口配置-->
+                        <GroupBox Header="通信配置" Margin="0,0,0,20"  
+                              Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=RS232}">
+                            <StackPanel DataContext="{Binding RS232}">
+                                <ComboBox wyw:ComboBoxElement.Title="串口"  SelectedItem="{Binding PortName}" 
+                                              ItemsSource="{Binding DataContext.PortNames,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
+                                <ComboBox wyw:ComboBoxElement.Title="波特率" SelectedItem="{Binding BaudRate}"
+                                              ItemsSource="{StaticResource BaudRateCollection}"/>
+
+                                <ComboBox wyw:ComboBoxElement.Title="数据位" Text="{Binding DataBits}">
+                                    <ComboBoxItem Content="5"/>
+                                    <ComboBoxItem Content="6"/>
+                                    <ComboBoxItem Content="7"/>
+                                    <ComboBoxItem Content="8"/>
+                                </ComboBox>
+                                <ComboBox wyw:ComboBoxElement.Title="校验位" SelectedIndex="{Binding  Parity}">
+                                    <ComboBoxItem Content="None"/>
+                                    <ComboBoxItem Content="Even"/>
+                                    <ComboBoxItem Content="Odd"/>
+                                    <ComboBoxItem Content="Mark"/>
+                                    <ComboBoxItem Content="Space"/>
+                                </ComboBox>
+                                <ComboBox wyw:ComboBoxElement.Title="停止位" SelectedIndex="{Binding  StopBits}">
+                                    <ComboBoxItem Content="0" Visibility="Collapsed"/>
+                                    <ComboBoxItem Content="1"/>
+                                    <ComboBoxItem Content="2"/>
+                                    <ComboBoxItem Content="1.5"/>
+                                </ComboBox>
+                                <TextBox  wyw:TextBoxElement.Title="发送缓存 (byte)" Text="{Binding WriteBufferSize}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <!--TCP Client-->
+                        <GroupBox Header="通信配置" Margin="0,0,0,20"   
+                              Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=TCPClient}">
+                            <StackPanel DataContext="{Binding TCPClient}">
+                                <TextBox wyw:TextBoxElement.Title="远程地址：" Text="{Binding RemoteIP}" />
+                                <TextBox wyw:TextBoxElement.Title="端口号：" Text="{Binding RemotePort}"/>
+                                <TextBox wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <!--TCP Server-->
+                        <GroupBox Header="通信配置" Margin="0,0,0,20"   
+                              Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=TCPServer}">
+                            <StackPanel DataContext="{Binding TCPServer}">
+                                <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}" 
+                                      ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
+                                <TextBox wyw:TextBoxElement.Title="端口号：" Text="{Binding LocalPort}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <!--UDP Client-->
+                        <GroupBox Header="通信配置" Margin="0,0,0,20"  
+                              Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=UDPClient}">
+                            <StackPanel DataContext="{Binding UDPClient}">
+                                <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}"  
+                                      ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
+                                <TextBox  wyw:TextBoxElement.Title="本地端口号：" Text="{Binding LocalPort}"/>
+                                <TextBox  wyw:TextBoxElement.Title="广播地址：" Text="{Binding BroadcastAddress}"/>
+                                <TextBox  wyw:TextBoxElement.Title="广播端口号：" Text="{Binding BroadcastPort}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <!--UDP Server-->
+                        <GroupBox Header="通信配置" Margin="0,0,0,20"   
+                              Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=UDPServer}">
+                            <StackPanel DataContext="{Binding UDPServer}">
+                                <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}"  
+                                      ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
+                                <TextBox wyw:TextBoxElement.Title="本地端口号：" Text="{Binding LocalPort}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <!--Modbus-->
+                        <GroupBox Header="Modbus配置" Margin="0,0,0,20" 
+                          Visibility="{Binding ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='1 2'}">
+                            <StackPanel >
+                                <ComboBox wyw:ComboBoxElement.Title="站点类型" SelectedItem="{Binding Modbus.StationType}" 
+                                      ItemsSource="{Binding Source={StaticResource ModbusTypeCollection} }" />
+                                <TextBox wyw:TextBoxElement.Title="从站地址（1-255）"  Text="{Binding Modbus.SlaveID}" 
+                                      Visibility="{Binding ProtocolType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=1}"/>
+                                <TextBox wyw:TextBoxElement.Title="事务标识（0-65535）"  Text="{Binding Modbus.TransactionID}"
+                                     Visibility="{Binding ProtocolType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=2}"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+               
+                    <!--Fuction Button-->
+                    <Grid Height="60">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="0.2*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="打开" Command="{Binding OpenCommand}"
+                                        IsEnabled="{Binding  Controller.Device.Client.IsOpen,Converter={StaticResource ReverseConverter}}"/>
+                        <Button Grid.Column="2" Content="关闭"  Command="{Binding CloseCommand}"/>
+                    </Grid>
+
+                </StackPanel>
+
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+   
+</UserControl>

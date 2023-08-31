@@ -14,8 +14,8 @@ namespace WYW.Communication.Protocol
             int length = (content != null ? content.Length : 0) + 2;
             List<byte> list = new List<byte>();
             list.AddRange(BitConverter.GetBytes(TransactionID));
-            list.AddRange(BigEndianBitConverter.GetBytes((UInt16)0)); // 2个字节，固定为0
-            list.AddRange(BigEndianBitConverter.GetBytes((UInt16)length));
+            list.AddRange(new byte[] { 0, 0 }); // 2个字节，固定为0
+            list.AddRange(BitConverterHelper.GetBytes((UInt16)length, EndianType.BigEndian));
             list.Add(slaveID);
             list.Add((byte)cmd);
             list.AddRange(content);
@@ -27,6 +27,7 @@ namespace WYW.Communication.Protocol
             Command = cmd;
          
         }
+
         /// <summary>
         /// 用于接收
         /// </summary>
@@ -41,7 +42,7 @@ namespace WYW.Communication.Protocol
             Command = (ModbusCommand)fullBytes[7];
             TransactionID  =(UInt16)((fullBytes[0]<<8)+ fullBytes[1]);
         }
-        internal static List<ProtocolBase> Analyse(List<byte> buffer)
+        public static List<ProtocolBase> Analyse(List<byte> buffer)
         {
             List<ProtocolBase> result = new List<ProtocolBase>();
             int startIndex = 0;
@@ -71,7 +72,6 @@ namespace WYW.Communication.Protocol
         }
         #endregion
 
-
         #region 属性
         /// <summary>
         /// 事务处理标识，2个字节，这里用UInt16表示，大端对其
@@ -87,5 +87,8 @@ namespace WYW.Communication.Protocol
         /// </summary>
         public ModbusCommand Command { get; private set; }
         #endregion
+
+
+   
     }
 }

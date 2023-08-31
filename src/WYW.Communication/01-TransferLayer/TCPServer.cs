@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -8,15 +9,18 @@ namespace WYW.Communication.TransferLayer
 {
     public class TCPServer : TransferBase
     {
-        private Socket clientSocket; // 最后一次连接的客户端
+        private Socket lastActiveClientSocket; // 最近一次活动的客户端
+        private List<Socket> clientSockets; // 客户端队列
         private readonly IPEndPoint ipep;
         private Socket serverSocket;
         private readonly byte[] inBuffer;
+        private readonly int maxClientCount; // 最大客户端数量
 
-        public TCPServer(string ip, int port, int receiveBufferSize = 4096)
+        public TCPServer(string ip, int port, int receiveBufferSize = 4096,int maxConnectCount=100)
         {
             inBuffer = new byte[receiveBufferSize];
             ipep = new IPEndPoint(IPAddress.Parse(ip), port);
+            maxClientCount = maxConnectCount;
             serverSocket = new Socket(ipep.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
         }
 
@@ -45,14 +49,20 @@ namespace WYW.Communication.TransferLayer
                         {
                             Socket client = serverSocket.Accept();
                             OnStatusChanged($"Socket建立连接。远程节点：{client.RemoteEndPoint}");
-                            Dispose(clientSocket);
-                            clientSocket = client; // 仅保持最后一个连接，如果保持多个连接请使用数组
-                            IsEstablished = true;
+                            if(clientSockets.Count>maxClientCount)
+                            {
+                                Dispose(clientSockets[0]);
+                                clientSockets.RemoveAt(0);
+                            }
+                          
+                            clientSockets.Add(client);
+                            lastActiveClientSocket = client;
                             Thread.Sleep(15);
                             ThreadPool.QueueUserWorkItem(delegate
                             {
-                                clientSocket_DataReceived();
+                                clientSocket_DataReceived(client);
                             });
+                            IsEstablished = true;
                         }
                         catch (Exception ex)
                         {
@@ -69,10 +79,10 @@ namespace WYW.Communication.TransferLayer
         {
             if (!IsOpen)
                 return;
-            if (clientSocket != null)
+            foreach (var client in clientSockets)
             {
-                clientSocket.Close();
-                clientSocket.Dispose();
+                client.Close();
+                client.Dispose();
             }
             if (serverSocket != null)
             {
@@ -85,11 +95,11 @@ namespace WYW.Communication.TransferLayer
 
         public override void Write(byte[] content)
         {
-            if (clientSocket != null)
+            if (lastActiveClientSocket != null)
             {
                 try
                 {
-                    clientSocket.Send(content);
+                    lastActiveClientSocket.Send(content);
                     OnDataTransmited(content);
                 }
                 catch (Exception ex)
@@ -99,19 +109,20 @@ namespace WYW.Communication.TransferLayer
             }
         }
         #endregion
-        private void clientSocket_DataReceived()
+        private void clientSocket_DataReceived(Socket client)
         {
             while (IsOpen)
             {
-                if (clientSocket != null)
+                if (client != null)
                 {
                     try
                     {
-                        if (clientSocket.Poll(0, SelectMode.SelectRead))
+                        if (client.Poll(0, SelectMode.SelectRead))
                         {
-                            var receivedCount = clientSocket.Receive(inBuffer, inBuffer.Length, SocketFlags.None);
+                            var receivedCount = client.Receive(inBuffer, inBuffer.Length, SocketFlags.None);
                             if (receivedCount > 0) //如果接收的消息为空 阻塞当前循环  
                             {
+                                lastActiveClientSocket = client;
                                 OnDataReceived(inBuffer.Take(receivedCount).ToArray());
                             }
                         }
@@ -120,7 +131,7 @@ namespace WYW.Communication.TransferLayer
                     catch (Exception ex)
                     {
                         OnStatusChanged($"与客户端断开连接，可能是客户端主动断开，也可能是网络中断。");
-                        Dispose(clientSocket);
+                        Dispose(client);
                         IsEstablished = false;
                         break; // 退出本次接收线程
                     }

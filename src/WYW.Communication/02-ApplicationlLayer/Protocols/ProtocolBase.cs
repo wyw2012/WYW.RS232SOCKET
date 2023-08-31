@@ -27,7 +27,7 @@ namespace WYW.Communication.Protocol
         /// <summary>
         /// 创建时间
         /// </summary>
-        public DateTime CreateTime { get; }=DateTime.Now;
+        public DateTime CreateTime { get; internal set; } =DateTime.Now;
         #endregion
 
         #region  内部成员

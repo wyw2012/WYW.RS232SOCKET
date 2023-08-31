@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using WYW.RS232SOCKET.ViewModels;
 
-namespace WYW.RS232SOCKET
+namespace WYW.RS232SOCKET.Views
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -25,21 +25,10 @@ namespace WYW.RS232SOCKET
         public MainWindow()
         {
             InitializeComponent();
+            Title = "RS232 & Socket & Modbus调试助手 V1.5";
             this.DataContext = new MainWindowViewModel();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            Title = "RS232 & Socket & Modbus调试助手 V1.2";
-            if (SystemParameters.PrimaryScreenHeight < this.Height)
-            {
-                this.Height = SystemParameters.WorkArea.Height;
-                this.Width = this.Height * 4 / 3;
-                this.Top = 0;
-                this.Left = (SystemParameters.WorkArea.Width - this.Width) / 2;
-            }
-
-        }
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);

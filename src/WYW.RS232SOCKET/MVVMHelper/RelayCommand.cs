@@ -9,8 +9,7 @@ namespace WYW.RS232SOCKET
         private readonly Action<T> _execute;
         private readonly Predicate<T> _canExecute;
 
-        public RelayCommand(Action<T> execute)
-            : this(execute, null)
+        public RelayCommand(Action<T> execute): this(execute, null)
         {
         }
 

@@ -9,111 +9,179 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:Name="userControl">
-    <Grid>
+    <Grid Margin="20" DataContext="{Binding ModbusViewModel}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
-        <GroupBox Header="寄存器配置">
-            <Grid>
-                <Grid >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
 
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBox Text="{Binding StartAddress}" 
-                                 wyw:TextBoxElement.Title="起始地址" 
-                                 wyw:TextBoxElement.TitleWidth="1.5*"/>
-                        <TextBox Text="{Binding EndAddress}"
-                                 wyw:TextBoxElement.Title="终止地址" 
-                                 wyw:TextBoxElement.TitleWidth="1.5*"/>
-                    </StackPanel>
-                  
-                    <Button Grid.Column="2"  Content="创建模板" Command="{Binding CreateRegisterCommand}"
-                            wyw:ButtonElement.CornerRadius="6"/>
-                    <Button Grid.Column="4"  Content="加载模板" Command="{Binding LoadTemplateCommand}"
-                            wyw:ButtonElement.CornerRadius="6"/>
-                    <Button Grid.Column="6"  Content="保存模板" Command="{Binding SaveTemplateCommand}"
-                            wyw:ButtonElement.CornerRadius="6"/>
-                    <Grid Grid.Column="8" Grid.ColumnSpan="5"
-                          Visibility="{Binding Path=Config.Modbus.ModbusType, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+            <Expander Grid.Column="0" Header="寄存器配置"  IsExpanded="{Binding IsExpanded}">
+                <StackPanel>
+                    <TextBox Text="{Binding RegisterStartAddress}"  wyw:TextBoxElement.Title="起始地址" />
+                    <TextBox Text="{Binding RegisterCount}" wyw:TextBoxElement.Title="寄存器数量" />
+
+                    <Grid Height="60" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="0.2*"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="0.2*"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="初始化寄存器" Command="{Binding CreateRegisterCommand}"/>
+                        <Button Grid.Column="2" Content="加载模板" Command="{Binding LoadTemplateCommand}"/>
+                        <Button Grid.Column="4" Content="保存模板" Command="{Binding SaveTemplateCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+
+            <Expander Grid.Column="2"  Header="寄存器操作" IsExpanded="{Binding IsExpanded}"
+                          Visibility="{Binding Path=Controller.Modbus.StationType, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}" >
+                <StackPanel>
+                    <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
+                                  IsChecked="{Binding Controller.Modbus.IsSupportMultiWriteCommand}"
+                                  wyw:ToggleButtonElement.Title="支持多指令（0x10、0x0F）"/>
+                    <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
+                                  IsChecked="{Binding Controller.Send.IsCyclic}"
+                                  wyw:ToggleButtonElement.Title="定时读写"/>
+                    <TextBox Text="{Binding Controller.Send.CyclicInterval}" wyw:TextBoxElement.Title="循环周期（ms）"
+                             Visibility="{Binding Controller.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+                    <TextBox Text="{Binding Controller.Send.ResponseTimeout}" wyw:TextBoxElement.Title="应答超时（ms）"/>
+
+                    <Grid Height="60" Margin="0,10,0,0"  IsEnabled="{Binding Controller.Device.IsConnected,FallbackValue=false}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="10"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="0.2*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0"  Content="读寄存器" Command="{Binding ReadRegisterCommand}"
-                            wyw:ButtonElement.CornerRadius="6" 
-                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"/>
-                        <Button Grid.Column="2" Content="写寄存器"  Command="{Binding WriteRegisterCommand}"
-                            wyw:ButtonElement.CornerRadius="6" 
-                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"/>
-                        <Button Grid.Column="4" Content="停     止"  Command="{Binding StopSendCommand}"
-                            wyw:ButtonElement.CornerRadius="6" 
-                            IsEnabled="{Binding Device.IsConnected,FallbackValue=false}"
-                            Visibility="{Binding Config.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+                        <Button Grid.Column="0" Content="读寄存器" Command="{Binding ReadRegisterCommand}"/>
+                        <Button Grid.Column="2" Content="写寄存器"  Command="{Binding WriteRegisterCommand}"/>
                     </Grid>
-                  
-                </Grid>
-            </Grid>
+                </StackPanel>
+            </Expander>
 
-        </GroupBox>
-        <Grid Grid.Row="1" Name="ProxyGrid"/>
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Registers}"  Margin="0,10,0,0" SelectionUnit="Cell">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="" Width="0.5*"  Binding="{Binding IsChecked,UpdateSourceTrigger=PropertyChanged}" 
+            <Grid Grid.ColumnSpan="3" 
+                  Visibility="{Binding IsRunning,Converter={StaticResource ConstToVisibilityConverter}}">
+               
+                <Button Content="停        止"  
+                        wyw:ButtonElement.IcoGeometry="{StaticResource StopGeometry}"
+                        Command="{Binding StopReadWriteCommand}"
+                        Visibility="{Binding Controller.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid Name="ProxyGrid"/>
+            <DataGrid  ItemsSource="{Binding Controller.RegisterCollection}"  CanUserSortColumns="False" SelectedIndex="{Binding SelectedIndex }">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Width="0.5*"  Binding="{Binding IsChecked,UpdateSourceTrigger=PropertyChanged}" 
                                         ElementStyle="{StaticResource DataGridCheckBoxEditStyle}"
                                         EditingElementStyle="{StaticResource DataGridCheckBoxEditStyle}" 
-                                        Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
-                <DataGridTextColumn Width="0.7*" Header="地址" Binding="{Binding Address}"/>
-                <DataGridComboBoxColumn Header="属性"  Width="0.7*" 
+                                        CanUserSort="False"
+                                        Visibility="{Binding Path=DataContext.Controller.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+                        <DataGridCheckBoxColumn.Header>
+                            <CheckBox Margin="-5,0"  HorizontalAlignment="Left"   IsChecked="{Binding Path=DataContext.IsSelectAll,Source={x:Reference ProxyGrid}}"/>
+                        </DataGridCheckBoxColumn.Header>
+                    </DataGridCheckBoxColumn>
+                    <DataGridComboBoxColumn Header="寄存器类型"  Width="1.2*" 
+                                        ItemsSource="{Binding Source={StaticResource RegisterTypeCollection} }" 
+                                        EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                                        SelectedItemBinding="{Binding RegisterType,UpdateSourceTrigger=PropertyChanged}" />
+
+
+                    <DataGridTextColumn Width="*" Header="地址" Binding="{Binding Address}">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
+                                <Setter Property="ToolTip">
+                                    <Setter.Value>
+                                        <TextBlock Text="{Binding Address,StringFormat={}0x{0:X4}}"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridComboBoxColumn Header="读写"  Width="0.8*" 
                                         ItemsSource="{Binding Source={StaticResource RegisterWriteTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding WriteType,UpdateSourceTrigger=PropertyChanged}" 
-                                        Visibility="{Binding Path=DataContext.Config.Modbus.ModbusType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}"/>
+                                        Visibility="{Binding Path=DataContext.Controller.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+                        <DataGridComboBoxColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
+                                <Setter Property="IsEnabled" >
+                                    <Setter.Value>
+                                        <Binding Path="RegisterType"  Converter="{StaticResource ConstCollectionToBooleanConverter}" ConverterParameter="保持寄存器 线圈 "/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridComboBoxColumn.CellStyle>
+                    </DataGridComboBoxColumn>
 
-                <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value}"/>
-                <DataGridComboBoxColumn Header="值类型"  Width="*" 
+                    <DataGridComboBoxColumn Header="值类型"  Width="*" 
                                         ItemsSource="{Binding Source={StaticResource RegisterValueTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
-                                        SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}" />
-                <DataGridComboBoxColumn Header="对齐"  Width="1.1*" 
+                                        SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridComboBoxColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
+                                <Setter Property="IsEnabled" >
+                                    <Setter.Value>
+                                        <Binding Path="RegisterType"  Converter="{StaticResource ConstCollectionToBooleanConverter}" ConverterParameter="保持寄存器 输入寄存器"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridComboBoxColumn.CellStyle>
+                    </DataGridComboBoxColumn>
+                    <DataGridTextColumn Header="寄存器数"  Width="1.1*"  Binding="{Binding RegisterCount}" >
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
+                                <Setter Property="IsEnabled" >
+                                    <Setter.Value>
+                                        <Binding Path="ValueType"  Converter="{StaticResource ConstToBooleanConverter}" ConverterParameter="UTF8"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridComboBoxColumn Header="对齐方式"  Width="1.1*" 
                                         ItemsSource="{Binding Source={StaticResource EndianTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding EndianType,UpdateSourceTrigger=PropertyChanged}" />
-                <DataGridTextColumn Width="5*" Header="描述" Binding="{Binding Description}"/>
-            </DataGrid.Columns>
-        </DataGrid>
-        <Grid Grid.Row="2"  Margin="0,10,0,0">
-            <ListBox BorderThickness="0" ItemsSource="{Binding Config.Display.DisplayItems}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.ContextMenu>
+                    <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value,UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
+                                <Setter Property="IsEnabled" >
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource RegiseterValueCanEditConverter}">
+                                            <Binding Path="DataContext.Controller.Modbus.StationType" Source="{x:Reference ProxyGrid}"/>
+                                            <Binding Path="WriteType" />
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="ToolTip">
+                                    <Setter.Value>
+                                        <TextBlock Text="{Binding .,Converter={StaticResource RegiseterValueFormatConverter}}"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Width="*" Header="单位" Binding="{Binding Unit,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Width="6*" Header="描述" Binding="{Binding Description}"/>
+                </DataGrid.Columns>
+                <DataGrid.ContextMenu>
                     <ContextMenu >
-                        <MenuItem Header="复    制" Command="{Binding CopyTextCommand}" 
-                               CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ContextMenu}}}"/>
+                        <MenuItem Header="新增"  Command="{Binding AddRegisterCommand}"/>
+                        <MenuItem Header="删除"  Command="{Binding DeleteRegisterCommand}"/>
                     </ContextMenu>
-                </ListBox.ContextMenu>
-            </ListBox>
+                </DataGrid.ContextMenu>
+            </DataGrid>
         </Grid>
     </Grid>
+
 </UserControl>

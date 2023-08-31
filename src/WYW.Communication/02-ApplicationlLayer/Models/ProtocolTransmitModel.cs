@@ -15,6 +15,7 @@ namespace WYW.Communication.ApplicationlLayer
         public ProtocolTransmitModel(ProtocolBase protocol)
         {
             SendBody = protocol;
+            lastWriteTime = DateTime.Now;
         }
         /// <summary>
         /// 发送或接收对象
@@ -26,7 +27,18 @@ namespace WYW.Communication.ApplicationlLayer
         /// <summary>
         /// 最后一次发送数据结束时间
         /// </summary>
-        internal DateTime LastWriteTime { get;  set; } = DateTime.Now;
+        /// 
+        private DateTime lastWriteTime;
+
+        internal DateTime LastWriteTime
+        {
+            get { return lastWriteTime; }
+            set
+            { 
+                lastWriteTime = value;
+                SendBody.CreateTime = value; // 将发送对象的创建时间修改为发送时间
+            }
+        }
         /// <summary>
         /// 是否需要应答
         /// </summary>

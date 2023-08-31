@@ -6,16 +6,18 @@ using System.Threading;
 using WYW.Communication.TransferLayer;
 using System.Collections.Concurrent;
 using DataReceivedEventArgs = WYW.Communication.TransferLayer.DataReceivedEventArgs;
+using WYW.Communication.ApplicationlLayer;
+using System.Threading.Tasks;
 
-namespace WYW.Communication.ApplicationlLayer
+namespace WYW.Communication
 {
     /// <summary>
     /// 使用协议的设备
     /// </summary>
     public class Device : ObservableObject, IDisposable
     {
+        private bool disposed = false;
         private bool isOpened = false;
-        private TransferBase client;
         private static object ReadLock = new object();
         private List<byte> receiveBuffer = new List<byte>();
         private DateTime lastReceiveTime = DateTime.Now; // 最后一次接收数据的时间
@@ -28,54 +30,62 @@ namespace WYW.Communication.ApplicationlLayer
         #region 构造函数
         public Device(TransferBase client)
         {
-            this.client = client;
-            client.PropertyChanged += Client_PropertyChanged;
+            Client = client;
+            Client.PropertyChanged += Client_PropertyChanged;
         }
 
         /// <summary>
         /// 构造方法
         /// </summary>
-        /// <param name="client">传输媒介</param>
+        /// <param name="Client">传输媒介</param>
         /// <param name="protocol">应用层协议类型</param>
-        public Device(TransferBase client, ProtocolType protocol) : this(client)
+        public Device(TransferBase Client, ProtocolType protocol) : this(Client)
         {
             ProtocolType = protocol;
         }
         #endregion
 
         #region  属性
-
+        private DeviceStatus deviceStatus= DeviceStatus.UnConnected;
         private bool isConnected;
         private bool logEnabled;
-        private bool isKeepHeartbeat;
-        private ProtocolBase heartbeatContent = null;
         /// <summary>
         /// 是否建立连接，如果有心跳，则利用心跳判断，如果无心跳，则以通讯建立连接为标志
         /// </summary>
         public bool IsConnected
         {
             get => isConnected;
-            set => SetProperty(ref isConnected, value);
+            set
+            {
+                SetProperty(ref isConnected, value);
+                if (!value)
+                {
+                    DeviceStatus = DeviceStatus.UnConnected;
+                }
+                else
+                {
+                    if (DeviceStatus == DeviceStatus.UnConnected)
+                    {
+                        DeviceStatus = DeviceStatus.Standy;
+                    }
+                }
+            }
         }
+        /// <summary>
+        /// 设备编号，用于多设备之间的区分
+        /// </summary>
+        public int DeviceID { get; set; }
+
+        public TransferBase Client { get;}
+        /// <summary>
+        /// 设备状态
+        /// </summary>
+        public DeviceStatus DeviceStatus { get => deviceStatus; protected set => SetProperty(ref deviceStatus, value); }
 
         /// <summary>
-        /// 是否保持心跳，如果为true，需要设置HeartbeatContent
+        /// 心跳配置
         /// </summary>
-        public bool IsKeepHeartbeat
-        {
-            get =>  isKeepHeartbeat;
-            set => SetProperty(ref  isKeepHeartbeat, value);
-        }
-
-        /// <summary>
-        /// 发送心跳的对象，仅在IsKeepHeartbeat=true时有效
-        /// </summary>
-        public ProtocolBase HeartbeatContent
-        {
-            get => heartbeatContent;
-            set => SetProperty(ref heartbeatContent, value);
-        }
-
+       public Heartbeat Heartbeat { get; }=new Heartbeat();
         /// <summary>
         /// 是否启用日志
         /// </summary>
@@ -84,6 +94,14 @@ namespace WYW.Communication.ApplicationlLayer
             get { return logEnabled; }
             set { logEnabled = value; }
         }
+        /// <summary>
+        /// 是否为调试模式，调试模式下发送返回成功，但Response值为null，需要调用者继续处理
+        /// </summary>
+        public bool IsDebugModel { get; set; }
+        /// <summary>
+        /// 日志文件夹，默认值为“Log\\Device”
+        /// </summary>
+        public string LogFolder { get; set; } = "Log\\Device";
         /// <summary>
         /// 应用层协议类型
         /// </summary>
@@ -95,9 +113,10 @@ namespace WYW.Communication.ApplicationlLayer
         #endregion
 
         #region 事件
-
         public delegate void ProtocolReceivedEventHandler(object sender, ProtocolBase obj);
         public delegate void ProtocolTransmitedEventHandler(object sender, ProtocolBase obj);
+        public delegate void HeartbeatTriggeredEventHandler(object sender, ExecutionResult result);
+
         /// <summary>
         /// 接收消息事件
         /// </summary>
@@ -106,7 +125,10 @@ namespace WYW.Communication.ApplicationlLayer
         /// 发送消息事件
         /// </summary>
         public event ProtocolTransmitedEventHandler ProtocolTransmitedEvent;
-
+        /// <summary>
+        /// 心跳触发事件，通过IsSuccess判断心跳是否正常
+        /// </summary>
+        public event HeartbeatTriggeredEventHandler HeartbeatTriggeredEvent;
         #endregion
 
         #region  公共方法
@@ -115,14 +137,21 @@ namespace WYW.Communication.ApplicationlLayer
         /// </summary>
         public void Open()
         {
+            if (IsDebugModel)
+            {
+                IsConnected = true;
+                DeviceStatus = DeviceStatus.Standy;
+                return;
+            }
+
             if (isOpened)
             {
                 return;
             }
-            if (client != null)
+            if (Client != null)
             {
-                client.Open();
-                client.DataReceivedEvent += Client_DataReceivedEvent;
+                Client.Open();
+                Client.DataReceivedEvent += Client_DataReceivedEvent;
                 isOpened = true;
                 heartbeatThread = new Thread(StartHeartbeat) { IsBackground = true };
                 heartbeatThread.Start();
@@ -135,14 +164,20 @@ namespace WYW.Communication.ApplicationlLayer
         /// </summary>
         public void Close()
         {
+            if (IsDebugModel)
+            {
+                IsConnected = false;
+                return;
+            }
+
             if (!isOpened)
             {
                 return;
             }
-            if (client != null)
+            if (Client != null)
             {
-                client.DataReceivedEvent -= Client_DataReceivedEvent;
-                client.Close();
+                Client.DataReceivedEvent -= Client_DataReceivedEvent;
+                Client.Close();
                 isOpened = false;
                 IsConnected = false;
                 isKeepHeartbeatTheadAlive = false;
@@ -151,6 +186,21 @@ namespace WYW.Communication.ApplicationlLayer
                 sendThread = null;
             }
         }
+        /// <summary>
+        /// 复位错误，并清除报警状态
+        /// </summary>
+        public virtual void ResetError()
+        {
+            if (!IsConnected)
+            {
+                DeviceStatus = DeviceStatus.UnConnected;
+            }
+            else
+            {
+                DeviceStatus = DeviceStatus.Standy;
+            }
+        }
+
         /// <summary>
         /// 发送数据
         /// </summary>
@@ -161,6 +211,11 @@ namespace WYW.Communication.ApplicationlLayer
         /// <returns>通过IsSuccess判断是否发送成功，Response返回应答数据</returns>
         public ExecutionResult SendProtocol(ProtocolBase sendObject, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
         {
+            if (IsDebugModel)
+            {
+                return ExecutionResult.Success(null);
+            }
+
             if (sendObject.GetType().Name != ProtocolType.ToString())
             {
                 throw new ArgumentException("发送的对象类型与协议类型不匹配");
@@ -191,7 +246,8 @@ namespace WYW.Communication.ApplicationlLayer
                 }
                 else
                 {
-                    return ExecutionResult.Failed();
+                    DeviceStatus = DeviceStatus.Warning;
+                    return ExecutionResult.Failed("通讯超时");
                 }
 
             }
@@ -215,25 +271,53 @@ namespace WYW.Communication.ApplicationlLayer
         /// </summary>
         public void Dispose()
         {
-            client.PropertyChanged -= Client_PropertyChanged;
+            this.Close();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+
         #endregion
 
         #region 保护方法
         protected virtual void OnDataReceived(ProtocolBase e)
         {
-            ProtocolReceivedEvent?.Invoke(this, e);
-            if (LogEnabled)
+            Task.Run(() =>
             {
-                Logger.WriteLine("Device",$"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
-            }
+                ProtocolReceivedEvent?.Invoke(this, e);
+                if (LogEnabled)
+                {
+                    Logger.WriteLine(LogFolder, $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
+                }
+            });
+
         }
         protected virtual void OnDataTransmited(ProtocolBase e)
         {
-            ProtocolTransmitedEvent?.Invoke(this, e);
-            if (LogEnabled)
+            Task.Run(() =>
             {
-                Logger.WriteLine("Device",$"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
+                ProtocolTransmitedEvent?.Invoke(this, e);
+                if (LogEnabled)
+                {
+                    Logger.WriteLine(LogFolder, $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
+                }
+            });
+        }
+        protected virtual void OnHeartbeatTriggered(ExecutionResult result)
+        {
+            Task.Run(() =>
+            {
+                HeartbeatTriggeredEvent?.Invoke(this,result);
+            });
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    Client.PropertyChanged -= Client_PropertyChanged;
+                }
+                disposed = true;
             }
         }
         #endregion
@@ -265,6 +349,11 @@ namespace WYW.Communication.ApplicationlLayer
                             for (int i = 0; i < cmd.MaxSendCount; i++)
                             {
                                 Write(cmd);
+                                // 如果手动接收数据，则调用读取方法
+                                if (Client.IsManulReceiveData)
+                                {
+                                    Client.Read(cmd.ResponseTimeout);
+                                }
                                 while (!cmd.HasReceiveResponse)
                                 {
                                     if ((DateTime.Now - cmd.LastWriteTime).TotalMilliseconds >= cmd.ResponseTimeout)
@@ -308,11 +397,11 @@ namespace WYW.Communication.ApplicationlLayer
             try
             {
                 // 建立连接后才发送
-                if (client.IsEstablished)
+                if (Client.IsEstablished)
                 {
-                    client.Write(arg.SendBody.FullBytes);
                     arg.LastWriteTime = DateTime.Now;
                     OnDataTransmited(arg.SendBody);
+                    Client.Write(arg.SendBody.FullBytes);
                 }
             }
             catch (Exception ex)
@@ -327,7 +416,6 @@ namespace WYW.Communication.ApplicationlLayer
         private void Client_DataReceivedEvent(object sender, DataReceivedEventArgs e)
         {
             LastReceiveTime = DateTime.Now;
-            IsConnected = true;
             List<ProtocolBase> items = new List<ProtocolBase>();
             lock (ReadLock)
             {
@@ -351,6 +439,9 @@ namespace WYW.Communication.ApplicationlLayer
                     case ProtocolType.AsciiCR:
                         items = AsciiCR.Analyse(receiveBuffer);
                         break;
+                    case ProtocolType.AsciiLF:
+                        items = AsciiLF.Analyse(receiveBuffer);
+                        break;
                     case ProtocolType.AsciiCheckSum:
                         items = AsciiCheckSum.Analyse(receiveBuffer);
                         break;
@@ -361,22 +452,22 @@ namespace WYW.Communication.ApplicationlLayer
                         items = ModbusRTU.Analyse(receiveBuffer);
                         break;
                     case ProtocolType.AsciiBare:
-                        ThreadPool.QueueUserWorkItem(delegate
+                        // 接收到最后一个字节延迟20ms，如果未接收到新数据，再分析结果
+                        Thread.Sleep(20);
+                        if ((DateTime.Now - lastReceiveTime).TotalMilliseconds < 20)
                         {
-                            // 接收到最后一个字节延迟20ms，如果未接收到新数据，再分析结果
-                            Thread.Sleep(20);
-                            if ((DateTime.Now - lastReceiveTime).TotalMilliseconds > 20)
-                            {
-                                items = AsciiBare.Analyse(receiveBuffer);
-                                ProcessProtocolItems(items);
-                            }
-                        });
-                        return;
-
+                            return;
+                        }
+                        items = AsciiBare.Analyse(receiveBuffer);
+                        break;
                 }
-                ProcessProtocolItems(items);
             }
-
+            // 如果接收到符合协议的数据，则认为通讯成功
+            if(items.Count>0)
+            {
+                IsConnected = true;
+            }
+            ProcessProtocolItems(items);
         }
         private void ProcessProtocolItems(List<ProtocolBase> items)
         {
@@ -398,6 +489,7 @@ namespace WYW.Communication.ApplicationlLayer
         }
 
         #endregion
+
         #region 心跳
         /// <summary>
         /// 心跳线程
@@ -407,28 +499,46 @@ namespace WYW.Communication.ApplicationlLayer
             isKeepHeartbeatTheadAlive = true;
             while (isKeepHeartbeatTheadAlive)
             {
-                if (HeartbeatContent == null || !IsKeepHeartbeat)
+                if (Heartbeat.Content == null || !Heartbeat.IsEnabled)
                 {
                     continue;
                 }
-                if ((DateTime.Now - LastReceiveTime).TotalSeconds >= 5)
+                if (!Client.IsEstablished)
                 {
-                    IsConnected = SendProtocol(HeartbeatContent).IsSuccess;
+                    continue;
+                }
+                if ((DateTime.Now - LastReceiveTime).TotalSeconds >= Heartbeat.IntervalSeconds)
+                {
+                    var result = SendProtocol(Heartbeat.Content,true, Heartbeat.MaxRetryCount,Heartbeat.Timeout);
+                    IsConnected = result.IsSuccess;
+                    if(Heartbeat.HeartbeatTriggerCondition== HeartbeatTriggerCondition.Always)
+                    {
+                        OnHeartbeatTriggered(result);
+                    }
+                    else
+                    {
+                        if(IsConnected)
+                        {
+                            OnHeartbeatTriggered(result);
+                        }
+                    }
+                  
                 }
                 Thread.Sleep(2000);
             }
         }
         #endregion
+
         #endregion
 
         #region 事件处理
 
         private void Client_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (!IsKeepHeartbeat || HeartbeatContent == null)
+            if (!Heartbeat.IsEnabled || Heartbeat.Content == null)
             {
                 // 握手信息改变，则连接状态也同步改变
-                IsConnected = client.IsEstablished;
+                IsConnected = Client.IsEstablished;
             }
         }
         #endregion

@@ -14,11 +14,11 @@ namespace WYW.Communication
         /// <summary>
         /// 指令是否执行成功，如果接收到了应答，且应答内容复合要求，则为true，否则为false
         /// </summary>
-        public bool IsSuccess { get; internal set; }
+        public bool IsSuccess { get;  set; }
         /// <summary>
-        /// 仅在IsSuccess=false时有效
+        /// 错误信息，仅在IsSuccess=false时有效
         /// </summary>
-        public string Message { get; internal set; }
+        public string ErrorMessage { get;  set; }
         /// <summary>
         /// 接收到的应答值，仅在IsSuccess=true时有效
         /// </summary>
@@ -46,7 +46,7 @@ namespace WYW.Communication
         {
             var result = new ExecutionResult(false)
             {
-                Message = errorMessage,
+                ErrorMessage = errorMessage,
             };
             return result;
         }

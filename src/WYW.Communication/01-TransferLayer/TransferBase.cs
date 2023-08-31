@@ -1,7 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace WYW.Communication.TransferLayer
 {
+    /// <summary>
+    /// 传输层基类，子类有RS232Client、TCPClient、TCPServer、UDPClient、UDPServer
+    /// </summary>
     public abstract class TransferBase : ObservableObject
     {
 
@@ -35,8 +39,15 @@ namespace WYW.Communication.TransferLayer
             get => isOpen;
             set => SetProperty(ref isOpen, value);
         }
+        /// <summary>
+        /// 日志文件夹，绝对或者相对路径
+        /// </summary>
+        public string LogFolder { get; set; } = "Log\\Commucation";
 
-
+        /// <summary>
+        /// 是否手动接收数据，默认自动读取数据，然后通过<see cref="DataReceivedEvent"/>事件通知订阅者
+        /// </summary>
+        public bool IsManulReceiveData { get; protected set; }
         #endregion
 
         #region  公共事件
@@ -74,48 +85,77 @@ namespace WYW.Communication.TransferLayer
         /// <param name="content"></param>
         public abstract void Write(byte[] content);
 
+        /// <summary>
+        /// 读数据
+        /// </summary>
+        /// <param name="timeout">超时时间，单位ms</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception"></exception>
+        public virtual byte[] Read(int timeout = 0)
+        {
+            throw new System.Exception("The read method is not supported, please use DataTransmitedEvent to instead it.");
+        }
 
+        /// <summary>
+        /// 清空IO缓存
+        /// </summary>
+        /// <exception cref="System.Exception"></exception>
+        public virtual void ClearBuffer()
+        {
+           
+        }
         #endregion
 
         #region 内部方法
         protected void OnStatusChanged(string message)
         {
-            StatusChangedEventArgs e = new StatusChangedEventArgs(message);
-            StatusChangedEvent?.Invoke(this, e);
+            Task.Run(() =>
+            {
+                StatusChangedEventArgs e = new StatusChangedEventArgs(message);
+                StatusChangedEvent?.Invoke(this, e);
 
 #if DEBUG
-            Trace.WriteLine(e.ToString());
+                Trace.WriteLine(e.ToString());
 #endif
-            if (LogEnabled)
-            {
-                Logger.WriteLine("Commucation",e.ToString());
-            }
-
+                if (LogEnabled)
+                {
+                    Logger.WriteLine(LogFolder, e.ToString());
+                }
+            });
         }
         protected void OnDataReceived(byte[] buffer)
         {
-            DataReceivedEventArgs e = new DataReceivedEventArgs(buffer);
-            DataReceivedEvent?.Invoke(this, e);
-#if DEBUG
-            Trace.WriteLine(e.ToString());
-#endif
-            if (LogEnabled)
+            Task.Run(() =>
             {
-                Logger.WriteLine("Commucation", e.ToString(), false);
-            }
+                DataReceivedEventArgs e = new DataReceivedEventArgs(buffer);
+#if DEBUG
+                Trace.WriteLine(e.ToString());
+#endif
+                DataReceivedEvent?.Invoke(this, e);
+                if (LogEnabled)
+                {
+                    Logger.WriteLine(LogFolder, e.ToString());
+                }
+            });
+
 
         }
         protected void OnDataTransmited(byte[] buffer)
         {
-            DataTransmitedEventArgs e = new DataTransmitedEventArgs(buffer);
-            DataTransmitedEvent?.Invoke(this, e);
-#if DEBUG
-            Trace.WriteLine(e.ToString());
-#endif
-            if (LogEnabled)
+            Task.Run(() =>
             {
-                Logger.WriteLine("Commucation", e.ToString(), false);
-            }
+                DataTransmitedEventArgs e = new DataTransmitedEventArgs(buffer);
+
+#if DEBUG
+                Trace.WriteLine(e.ToString());
+#endif
+                DataTransmitedEvent?.Invoke(this, e);
+                if (LogEnabled)
+                {
+                    Logger.WriteLine(LogFolder, e.ToString());
+                }
+            });
+
         }
         #endregion
 

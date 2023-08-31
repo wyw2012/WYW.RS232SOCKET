@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace WYW.Communication.Protocol
 {
-    public class ModbusRTU:ProtocolBase
+    public class ModbusRTU : ProtocolBase
     {
         #region 子类必须实现的
-        private readonly static  int MinLength = 4;
+        private readonly static int MinLength = 4;
         public ModbusRTU(byte slaveID, ModbusCommand cmd, byte[] content)
         {
             List<byte> list = new List<byte>();
@@ -22,6 +22,7 @@ namespace WYW.Communication.Protocol
             SlaveID = slaveID;
             Command = cmd;
         }
+
         /// <summary>
         /// 用于接收
         /// </summary>
@@ -35,13 +36,13 @@ namespace WYW.Communication.Protocol
             SlaveID = fullBytes[0];
             Command = (ModbusCommand)fullBytes[1];
         }
-        internal static List<ProtocolBase> Analyse(List<byte> buffer)
+        public static List<ProtocolBase> Analyse(List<byte> buffer)
         {
             List<ProtocolBase> result = new List<ProtocolBase>();
             if (buffer.Count >= MinLength)
             {
                 int length = buffer.Count;
-                if(length==8 || length==6 || length%2==1)
+                if (length == 8 || length == 6 || length % 2 == 1)
                 {
                     var crc = GetModbusCRC(buffer.Take(buffer.Count - 2).ToArray());
                     if (crc[0] == buffer[buffer.Count - 2] &&
@@ -101,5 +102,6 @@ namespace WYW.Communication.Protocol
             return result;
         }
         #endregion
+
     }
 }

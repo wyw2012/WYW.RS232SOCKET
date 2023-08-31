@@ -29,16 +29,17 @@ namespace WYW.Communication.TransferLayer
             serialPort.Open();
             serialPort.DataReceived += serialPort_DataReceived;
             IsEstablished = IsOpen = true;
-            OnStatusChanged("设备已打开");
+            OnStatusChanged($"{serialPort.PortName}打开 [{serialPort.BaudRate},{serialPort.Parity},{serialPort.DataBits},{serialPort.StopBits}]");
         }
         public override void Close()
         {
             if (!IsOpen)
                 return;
             serialPort.DataReceived -= serialPort_DataReceived;
+            OnStatusChanged($"{serialPort.PortName}关闭");
             serialPort.Close();
             IsEstablished = IsOpen = false;
-            OnStatusChanged("设备已关闭");
+   
 
         }
         /// <summary>
@@ -79,6 +80,11 @@ namespace WYW.Communication.TransferLayer
             }
         }
 
+        public override void ClearBuffer()
+        {
+            serialPort?.DiscardInBuffer();
+            serialPort?.DiscardOutBuffer();
+        }
         #endregion
         private void serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {

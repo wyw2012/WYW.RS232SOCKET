@@ -32,7 +32,7 @@ namespace WYW.Communication.Protocol
             Content = fullBytes;
             FriendlyText = Encoding.UTF8.GetString(Content);
         }
-        internal static List<ProtocolBase> Analyse(List<byte> buffer)
+        public static List<ProtocolBase> Analyse(List<byte> buffer)
         {
             List<ProtocolBase> result = new List<ProtocolBase>();
             result.Add(new AsciiBare(buffer.ToArray()));

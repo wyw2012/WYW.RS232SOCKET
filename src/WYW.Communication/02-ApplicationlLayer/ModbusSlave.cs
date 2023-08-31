@@ -3,52 +3,68 @@ using System;
 using System.Collections.Generic;
 using WYW.Communication.TransferLayer;
 
-namespace WYW.Communication.ApplicationlLayer
+namespace WYW.Communication
 {
     /// <summary>
     /// Modbus从站
     /// </summary>
     public class ModbusSlave : Device
     {
-
-        public ModbusSlave(TransferBase client, int slaveID) : base(client)
+        public ModbusSlave(TransferBase client, int slaveID, ModbusProtocolType protocolType = ModbusProtocolType.Auto) : base(client)
         {
             SlaveID = slaveID;
-            if (client is RS232Client)
+            switch (protocolType)
             {
-                ProtocolType = ProtocolType.ModbusRTU;
-            }
-            else if (client is TCPClient)
-            {
-                ProtocolType = ProtocolType.ModbusTCP;
-            }
-            else if (client is TCPServer)
-            {
-                ProtocolType = ProtocolType.ModbusTCP;
-            }
-            else
-            {
-                throw new ArgumentException($"对象类型不能为{client.GetType().Name}");
+                case ModbusProtocolType.ModbusRTU:
+                    ProtocolType = ProtocolType.ModbusRTU;
+                    break;
+                case ModbusProtocolType.ModbusTCP:
+                    ProtocolType = ProtocolType.ModbusTCP;
+                    break;
+                case ModbusProtocolType.Auto:
+                    if (client is RS232Client)
+                    {
+                        ProtocolType = ProtocolType.ModbusRTU;
+                    }
+                    else if (client is TCPClient)
+                    {
+                        ProtocolType = ProtocolType.ModbusTCP;
+                    }
+                    else if (client is TCPServer)
+                    {
+                        ProtocolType = ProtocolType.ModbusTCP;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"对象类型不能为{client.GetType().Name}");
+                    }
+                    break;
             }
         }
         /// <summary>
         /// 从站节点ID
         /// </summary>
         public int SlaveID { get; }
+        public enum ModbusProtocolType
+        {
+            Auto,
+            ModbusRTU,
+            ModbusTCP
+        }
 
         #region 公共方法
         /// <summary>
         /// 响应读保持寄存器指令
         /// </summary>
         /// <param name="value">寄存器值</param>
-         /// <param name="transactionID">事务处理标识，2字节，大端对齐</param>
+        /// <param name="transactionID">事务处理标识，2字节，大端对齐</param>
         public void ResponseReadMoreHoldingRegisters(UInt16[] value, UInt16 transactionID = 0)
         {
             List<byte> content = new List<byte>();
-            content.AddRange(BigEndianBitConverter.GetBytes((UInt16)(value.Length * 2)));
+            content.AddRange(BitConverterHelper.GetBytes((UInt16)(value.Length * 2), EndianType.BigEndian));
             foreach (var item in value)
             {
-                content.AddRange(BigEndianBitConverter.GetBytes(item));
+                content.AddRange(BitConverterHelper.GetBytes(item, EndianType.BigEndian));
             }
             SendCommand(ModbusCommand.ReadMoreHoldingRegisters, content.ToArray(), transactionID);
 
@@ -62,8 +78,8 @@ namespace WYW.Communication.ApplicationlLayer
         public void ResponseWriteMoreHoldingRegisters(UInt16 startAddress, UInt16 count, UInt16 transactionID = 0)
         {
             List<byte> content = new List<byte>();
-            content.AddRange(BigEndianBitConverter.GetBytes(startAddress));
-            content.AddRange(BigEndianBitConverter.GetBytes(count));
+            content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
+            content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
             SendCommand(ModbusCommand.WriteMoreHoldingRegisters, content.ToArray(), transactionID);
         }
         /// <summary>
@@ -75,8 +91,8 @@ namespace WYW.Communication.ApplicationlLayer
         public void ResponseWriteOneHoldingRegister(UInt16 address, UInt16 value, UInt16 transactionID = 0)
         {
             List<byte> content = new List<byte>();
-            content.AddRange(BigEndianBitConverter.GetBytes(address));
-            content.AddRange(BigEndianBitConverter.GetBytes(value));
+            content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
+            content.AddRange(BitConverterHelper.GetBytes(value, EndianType.BigEndian));
             SendCommand(ModbusCommand.WriteOneHoldingRegister, content.ToArray(), transactionID);
         }
         /// <summary>
@@ -88,12 +104,12 @@ namespace WYW.Communication.ApplicationlLayer
         public void ResponseReadWriteHoldingRegisters(UInt16 readCount, UInt16[] writeValue, UInt16 transactionID = 0)
         {
             List<byte> content = new List<byte>();
-            content.AddRange(BigEndianBitConverter.GetBytes((UInt16)(readCount*2)));
+            content.AddRange(BitConverterHelper.GetBytes((UInt16)(readCount * 2), EndianType.BigEndian));
             foreach (var item in writeValue)
             {
-                content.AddRange(BigEndianBitConverter.GetBytes(item));
+                content.AddRange(BitConverterHelper.GetBytes(item, EndianType.BigEndian));
             }
-          
+
             SendCommand(ModbusCommand.ReadWriteHoldingRegisters, content.ToArray(), transactionID);
         }
         #endregion

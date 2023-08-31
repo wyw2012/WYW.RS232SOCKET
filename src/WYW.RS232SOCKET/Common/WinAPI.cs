@@ -27,5 +27,20 @@ namespace WYW.RS232SOCKET
         /// <returns></returns>
         [DllImport("NTDLL.dll", SetLastError = true)]
         public static extern int NtSetTimerResolution(uint RequestedResolution, bool SetResolution, out uint ActualResolution);
+
+        /// <summary>
+        /// 用于得到高精度计时器（如果存在这样的计时器）的值。如果安装的硬件不支持高精度计时器,函数将返回false。
+        /// </summary>
+        /// <param name="tick"></param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll ")]
+        public static extern bool QueryPerformanceCounter(out long tick);
+        /// <summary>
+        /// 返回硬件支持的高精度计数器的频率，如果安装的硬件不支持高精度计时器,函数将返回false。
+        /// </summary>
+        /// <param name="tick"></param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll ")]
+        public static extern bool QueryPerformanceFrequency(out long tick);
     }
 }

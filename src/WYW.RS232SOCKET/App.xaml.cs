@@ -21,6 +21,8 @@ namespace WYW.RS232SOCKET
        
         protected override void OnStartup(StartupEventArgs e)
         {
+            long value = 0;
+            var s = WinAPI.QueryPerformanceCounter(out value);
             uint minResolution, maxResolution, currentResolution;
             WinAPI.NtQueryTimerResolution(out maxResolution, out minResolution, out currentResolution);
             if (currentResolution > 10000)//如果定时器最小分辨率大于1ms
@@ -31,6 +33,7 @@ namespace WYW.RS232SOCKET
                     Debug.WriteLine($"设置时间精度失败，当前时间精度为：{currentResolution / 10000.0}ms");
                 }
             }
+            UI.Theme.AutoFitResolution();
             this.DispatcherUnhandledException += App_DispatcherUnhandledException; // UI线程
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException; // 非UI线程
             base.OnStartup(e);
@@ -40,12 +43,12 @@ namespace WYW.RS232SOCKET
         {
             try
             {
-                MessageBoxWindow.Error(e.Exception.Message);
+                MessageBox.Show(e.Exception.Message);
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                MessageBoxWindow.Error(ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 
@@ -56,12 +59,12 @@ namespace WYW.RS232SOCKET
             {
                 if (e.ExceptionObject is Exception ex)
                 {
-                    MessageBoxWindow.Error(ex.Message);
+                    MessageBox.Show(ex.Message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBoxWindow.Error(ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 

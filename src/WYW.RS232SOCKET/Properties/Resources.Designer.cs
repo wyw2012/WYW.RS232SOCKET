@@ -63,9 +63,9 @@ namespace WYW.RS232SOCKET.Properties {
         /// <summary>
         ///   查找 System.Byte[] 类型的本地化资源。
         /// </summary>
-        public static byte[] RegisterTemplate {
+        public static byte[] ResponseTemplate {
             get {
-                object obj = ResourceManager.GetObject("RegisterTemplate", resourceCulture);
+                object obj = ResourceManager.GetObject("ResponseTemplate", resourceCulture);
                 return ((byte[])(obj));
             }
         }

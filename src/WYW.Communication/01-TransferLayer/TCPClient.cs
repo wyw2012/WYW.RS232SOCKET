@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO.Ports;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace WYW.Communication.TransferLayer
 {
@@ -10,6 +13,7 @@ namespace WYW.Communication.TransferLayer
         private Socket clientSocket;
         private readonly System.Net.IPEndPoint ipep;
         private readonly byte[] inBuffer;
+        
 
         public TCPClient(string ip, int port, int receiveBufferSize = 4096)
         {
@@ -27,15 +31,15 @@ namespace WYW.Communication.TransferLayer
             if (clientSocket != null)
             {
                 IsOpen = true;
-                ThreadPool.QueueUserWorkItem(delegate
+                Task.Run(()=>
                 {
                     while (IsOpen)
                     {
                         try
                         {
                             clientSocket.Connect(ipep);
-                            IsEstablished = true;
                             OnStatusChanged($"Socket Client已建立连接。本地节点：{clientSocket.LocalEndPoint}");
+                            IsEstablished = true;
                             clientSocket_DataReceived();
                         }
                         // 目标主机未开启socket

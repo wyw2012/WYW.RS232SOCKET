@@ -10,18 +10,18 @@ using System.Threading.Tasks;
 
 namespace WYW.Communication
 {
-    class Logger
+    public class Logger
     {
         /// <summary>
         /// 写日志
         /// </summary>
-        /// <param name="folderPath">文件夹路径，相对路径</param>
+        /// <param name="folderPath">文件夹路径，绝对或者相对路径</param>
         /// <param name="content"></param>
         /// <param name="withTimeStamp">是否自动加入时间戳</param>
         public static void WriteLine(string folderPath, string content, bool withTimeStamp = false)
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", folderPath);
-            var writer = LogWritter.CreateInstance(path);
+            //var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderPath);
+            var writer = LogWritter.CreateInstance(folderPath);
             writer.WriteLine(content, withTimeStamp);
         }
     }
@@ -36,13 +36,16 @@ namespace WYW.Communication
         static LogWritter logger = null;
         public static LogWritter CreateInstance(string folder)
         {
-            var logger = loggerList.SingleOrDefault(x => x.Folder == folder);
-            if (logger == null)
+            lock (locker)
             {
-                logger = new LogWritter(folder);
-                loggerList.Add(logger);
+                var logger = loggerList.SingleOrDefault(x => x.Folder == folder);
+                if (logger == null)
+                {
+                    logger = new LogWritter(folder);
+                    loggerList.Add(logger);
+                }
+                return logger;
             }
-            return logger;
         }
 
         private StringBuilder sb = new StringBuilder(1024000);
