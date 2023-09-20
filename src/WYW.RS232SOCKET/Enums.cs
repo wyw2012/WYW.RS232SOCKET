@@ -1,6 +1,5 @@
 ﻿namespace WYW.RS232SOCKET
 {
-
     enum CommunicationType
     {
         RS232,
@@ -8,6 +7,7 @@
         TCPServer,
         UDPClient,
         UDPServer,
+        VISA,
     }
     enum StationType
     {
@@ -15,7 +15,7 @@
         从站,
     }
 
-    enum ProtocolType
+    enum TextProtocolType
     {
         Hex = 0,
         UTF8 = 1,
@@ -35,5 +35,15 @@
         /// 文本末尾加一个字节的累加和
         /// </summary>
         UTF8_CheckSum = 5,
+    }
+    /// <summary>
+    /// 字符串编码类型
+    /// </summary>
+    enum EncodeType
+    {
+        ASCII=1,
+        UTF8 = 2,
+        Unicode=3
+
     }
 }

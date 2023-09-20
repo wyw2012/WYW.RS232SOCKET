@@ -19,6 +19,7 @@
         </Style.Triggers>
     </Style>
 
+    <converter:ToHexConverter x:Key="ToHexConverter"/>
     <converter:RegiseterValueCanEditConverter x:Key="RegiseterValueCanEditConverter"/>
     <converter:RegiseterValueFormatConverter x:Key="RegiseterValueFormatConverter"/>
     <ObjectDataProvider x:Key="CommunicationTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
@@ -33,7 +34,13 @@
     </ObjectDataProvider>
     <ObjectDataProvider x:Key="ProtocolTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
-            <x:Type Type="local:ProtocolType"/>
+            <x:Type Type="local:TextProtocolType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+  
+    <ObjectDataProvider x:Key="EncodeTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="local:EncodeType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
     <x:Array x:Key="BaudRateCollection" Type="{x:Type sys:Int32}">
@@ -63,4 +70,10 @@
             <x:Type Type="comm:RegisterType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+    <ObjectDataProvider x:Key="ReadWriteTypeCollection" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type Type="comm:OperationType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+
 </ResourceDictionary>

@@ -21,29 +21,36 @@ namespace WYW.RS232SOCKET.Models
         {
             string hostName = Dns.GetHostName();
             var ip = Dns.GetHostAddresses(hostName).Where(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(x => x.ToString()).ToArray();
-            IPList = new List<string>();
             IPList.AddRange(ip);
             IPList.Add("127.0.0.1");
-
+            try
+            {
+               VISAResourceNames.AddRange(VISAClient.GetResouceNames()); 
+            }
+            catch
+            {
+            }
             // 设置默认值
             if (IPList.Count > 0)
             {
-                TCPClient.RemoteIP = TCPServer.LocalIP = UDPClient.LocalIP = UDPServer.LocalIP = IPList[0];
+              Config.TCPClient.RemoteIP = Config.TCPServer.LocalIP = Config.UDPClient.LocalIP = Config.UDPServer.LocalIP = IPList[0];
                 // 设置广播地址
                 var temp = IPList[0].Split('.');
                 if (temp.Length == 4)
                 {
-                    UDPClient.BroadcastAddress = $"{temp[0]}.{temp[1]}.{temp[2]}.255";
+                    Config.UDPClient.BroadcastAddress = $"{temp[0]}.{temp[1]}.{temp[2]}.255";
                 }
             }
             if (PortNames.Length > 0)
             {
-                RS232.PortName = PortNames[0];
+                Config.RS232.PortName = PortNames[0];
             }
 
         }
         public string[] PortNames => System.IO.Ports.SerialPort.GetPortNames();
-        public List<string> IPList { get; }
+        public List<string> IPList { get; } = new List<string>();
+
+        public List<string> VISAResourceNames { get; }=new List<string>();
 
         #region 协议
         private CommunicationType communicationType;
@@ -77,9 +84,9 @@ namespace WYW.RS232SOCKET.Models
         #endregion
 
         #region 实时显示
-       /// <summary>
-       /// 消息集合
-       /// </summary>
+        /// <summary>
+        /// 消息集合
+        /// </summary>
         public ObservableCollection<string> MessageCollection { get; } = new ObservableCollection<string>();
         /// <summary>
         /// 寄存器集合
@@ -104,17 +111,7 @@ namespace WYW.RS232SOCKET.Models
         #endregion
 
         #region 配置
-        public RS232Config RS232 { get; } = new RS232Config();
-        public TCPClientConfig TCPClient { get; } = new TCPClientConfig();
-        public TCPServerConfig TCPServer { get; } = new TCPServerConfig();
-        public UDPClientConfig UDPClient { get; } = new UDPClientConfig();
-        public UDPServerConfig UDPServer { get; } = new UDPServerConfig();
-        public DisplayConfig Display { get; } = new DisplayConfig();
-        public SendConfig Send { get; } = new SendConfig();
-        public ReceiveConfig Receive { get; } = new ReceiveConfig();
-        public StatusConfig Status { get; } = new StatusConfig();
-        public ModbusConfig Modbus { get; } = new ModbusConfig();
-        public RegisterConfig Register { get; } = new RegisterConfig();
+        public ConfigModel Config{ get; }= new ConfigModel();
         #endregion
 
         #region 公共方法
@@ -148,9 +145,11 @@ namespace WYW.RS232SOCKET.Models
             {
                 MessageCollection.Clear();
             }
-            Status.TotalReceived = 0;
-            Status.TotalSended = 0;
-            Status.Progress = 0;
+            Config.Status.TotalReceived = 0;
+            Config.Status.TotalSended = 0;
+            Config.Status.Progress = 0;
+            Config.Display.LastSend = "";
+            Config.Display.LastReceive = "";
         }
 
         #endregion
@@ -158,7 +157,7 @@ namespace WYW.RS232SOCKET.Models
         #region 事件处理
         private void Client_StatusChangedEvent(object sender, StatusChangedEventArgs e)
         {
-            Status.Message= e.Message;
+            Config.Status.Message = e.Message;
             MessageBoxControl.Tip($"[{e.CreateTime:HH:mm:ss.fff}] {e.Message}");
         }
         /// <summary>
@@ -168,25 +167,27 @@ namespace WYW.RS232SOCKET.Models
         /// <param name="obj"></param>
         private void Device_ProtocolTransmitedEvent(object sender, ProtocolBase obj)
         {
-            Status.TotalSended += obj.FullBytes.Length;
-            if (!Display.EnableDisplay)
+            Config.Status.TotalSended += obj.FullBytes.Length;
+            if (!Config.Display.EnableDisplay)
                 return;
             lock (locker)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (MessageCollection.Count >= Display.MaxMessageCount)
+                    if (MessageCollection.Count >= Config.Display.MaxMessageCount)
                     {
                         MessageCollection.RemoveAt(0);
                     }
-                    if (Display.DisplayType == 0)
+                    if (Config.Display.DisplayType == 1 && ProtocolType==0)
                     {
-                        MessageCollection.Add($"[{obj.CreateTime:HH:mm:ss.fff}] [Tx] {obj.FullBytes.ToHexString()}");
+                        Config.Display.LastSend = $"[{obj.CreateTime:HH:mm:ss.fff}] [Tx] {obj.FullBytes.ToUTF8()}";
+                       
                     }
                     else
                     {
-                        MessageCollection.Add($"[{obj.CreateTime:HH:mm:ss.fff}] [Tx] {obj.FullBytes.ToUTF8()}");
+                        Config.Display.LastSend = $"[{obj.CreateTime:HH:mm:ss.fff}] [Tx] {obj.FullBytes.ToHexString()}";
                     }
+                    MessageCollection.Add(Config.Display.LastSend);
                 });
             }
         }
@@ -197,37 +198,38 @@ namespace WYW.RS232SOCKET.Models
         /// <param name="obj"></param>
         private void Device_ProtocolReceivedEvent(object sender, ProtocolBase obj)
         {
-            Status.TotalReceived += obj.FullBytes.Length;
-            if (!Display.EnableDisplay)
+            Config.Status.TotalReceived += obj.FullBytes.Length;
+            if (!Config.Display.EnableDisplay)
                 return;
             lock (locker)
             {
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    if (ProtocolType > 0 && Modbus.StationType == StationType.从站)
+                    if (ProtocolType > 0 && Config.Modbus.StationType == StationType.从站)
                     {
                         MessageCollection.Clear();
                     }
-                    if (MessageCollection.Count >= Display.MaxMessageCount)
+                    if (MessageCollection.Count >= Config.Display.MaxMessageCount)
                     {
                         MessageCollection.RemoveAt(0);
                     }
-                    if (Display.DisplayType == 0)
+                    if (Config.Display.DisplayType == 1 && ProtocolType == 0)
                     {
-                        MessageCollection.Add($"[{obj.CreateTime:HH:mm:ss.fff}] [Rx] {obj.FullBytes.ToHexString()}");
+                        Config.Display.LastReceive = $"[{obj.CreateTime:HH:mm:ss.fff}] [Rx] {obj.FullBytes.ToUTF8()}";
                     }
                     else
                     {
-                        MessageCollection.Add($"[{obj.CreateTime:HH:mm:ss.fff}] [Rx] {obj.FullBytes.ToUTF8()}");
+                        Config.Display.LastReceive = $"[{obj.CreateTime:HH:mm:ss.fff}] [Rx] {obj.FullBytes.ToHexString()}";
                     }
+                    MessageCollection.Add(Config.Display.LastReceive);
                 });
             }
-            if (ProtocolType == 0 && Receive.IsAutoResponse)
+            if (ProtocolType == 0 && Config.Receive.IsAutoResponse)
             {
                 ProcessAutoResponse(obj);
             }
-            if (ProtocolType > 0 && Modbus.StationType == StationType.从站)
+            if (ProtocolType > 0 && Config.Modbus.StationType == StationType.从站)
             {
                 ProcessSlaveRecived(obj);
             }
@@ -236,9 +238,9 @@ namespace WYW.RS232SOCKET.Models
 
         private void ProcessAutoResponse(ProtocolBase obj)
         {
-            if (Receive.Response.ContainsKey(obj.FullBytes.ToHexString()))
+            if (Config.Receive.Response.ContainsKey(obj.FullBytes.ToHexString()))
             {
-                Device.SendBytes(Receive.Response[obj.FullBytes.ToHexString()]);
+                Device.SendBytes(Config.Receive.Response[obj.FullBytes.ToHexString()]);
             }
         }
         /// <summary>
@@ -250,11 +252,11 @@ namespace WYW.RS232SOCKET.Models
             ModbusCommand cmd = ModbusCommand.ReadMoreInputResiters;
             if (obj is ModbusTCP tcp)
             {
-                if (Modbus.SlaveID != tcp.SlaveID)
+                if (Config.Modbus.SlaveID != tcp.SlaveID)
                 {
                     return;
                 }
-                Modbus.TransactionID = tcp.TransactionID;
+                Config.Modbus.TransactionID = tcp.TransactionID;
                 cmd = tcp.Command;
             }
             else if (obj is ModbusRTU rtu)
@@ -268,58 +270,139 @@ namespace WYW.RS232SOCKET.Models
             switch (cmd)
             {
                 case ModbusCommand.ReadMoreCoils:
-                case ModbusCommand.ReadMoreDiscreteInputRegisters:
                     var startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
                     var count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
-                    content.Add((byte)count ); // 添加长度
+                    content.Add((byte)count); // 添加长度
                     for (int i = 0; i < count; i++) // 添加寄存器值
                     {
-                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i);
-                        if (register != null)
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType == RegisterType.线圈);
+                        // 当前队列中查找不到，则新增一个
+                        if (register == null)
                         {
-                            content.Add(register.Value=="1"?(byte)1: (byte)0);
-                            i = i - 1 + register.RegisterCount;
+                            register = new Register(startAddress + i, 0, RegisterType.线圈);
+                            RegisterCollection.Add(register);
                         }
                         else
                         {
-                            content.Add((byte)0);
+                            content.Add(register.Value == "1" ? (byte)1 : (byte)0);
+                        }
+                      
+                    }
+                    break;
+                case ModbusCommand.ReadMoreDiscreteInputRegisters:
+                     startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
+                     count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
+                    content.Add((byte)count); // 添加长度
+                    for (int i = 0; i < count; i++) // 添加寄存器值
+                    {
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType == RegisterType.离散量输入);
+                        // 当前队列中查找不到，则新增一个
+                        if (register == null)
+                        {
+                            register = new Register(startAddress + i, 0, RegisterType.线圈)
+                            {
+                                WriteType= RegisterWriteType.只读
+                            };
+                            RegisterCollection.Add(register);
+                        }
+                        else
+                        {
+                            content.Add(register.Value == "1" ? (byte)1 : (byte)0);
                         }
                     }
                     break;
                 case ModbusCommand.ReadMoreInputResiters:
-                case ModbusCommand.ReadMoreHoldingRegisters:
-                     startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
-                     count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
+                    // TODO 必须保持Master和Slave寄存器配置一致，否则会出现错乱
+                    startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
+                    count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
                     content.Add(((byte)(count * 2))); // 添加长度
                     for (int i = 0; i < count; i++) // 添加寄存器值
                     {
-                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i);
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType == RegisterType.输入寄存器);
                         if (register != null)
                         {
-                            content.AddRange(register.GetBytes());
                             i = i - 1 + register.RegisterCount;
                         }
                         else
                         {
-                            content.AddRange(new byte[] { 0, 0 });
+                            register = new Register(startAddress + i, 0, RegisterType.输入寄存器);
+                            RegisterCollection.Add(register);
                         }
+                        content.AddRange(register.GetBytes());
+                    }
+                    break;
+                case ModbusCommand.ReadMoreHoldingRegisters:
+                    // TODO 必须保持Master和Slave寄存器配置一致，否则会出现错乱
+                    startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
+                    count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
+                    content.Add(((byte)(count * 2))); // 添加长度
+                    for (int i = 0; i < count; i++) // 添加寄存器值
+                    {
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType == RegisterType.保持寄存器);
+                        if (register != null)
+                        {
+                            i = i - 1 + register.RegisterCount;
+                        }
+                        else
+                        {
+                            register = new Register(startAddress + i, 0, RegisterType.保持寄存器);
+                            RegisterCollection.Add(register);
+                        }
+                        content.AddRange(register.GetBytes());
                     }
                     break;
                 case ModbusCommand.WriteOneCoil:
-                case ModbusCommand.WriteOneHoldingRegister:
                     var registerAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
                     var registerValue = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
                     content.AddRange(BitConverterHelper.GetBytes((UInt16)registerAddress, EndianType.BigEndian));
                     content.AddRange(BitConverterHelper.GetBytes((UInt16)(registerValue), EndianType.BigEndian));
-                    register = RegisterCollection.SingleOrDefault(x => x.Address == registerAddress);
-                    if (register != null)
+                    register = RegisterCollection.SingleOrDefault(x => x.Address == registerAddress && x.RegisterType == RegisterType.线圈);
+                    if (register == null)
                     {
-                        register.Value = register.GetValue(obj.Content, 2);
+                        register = new Register(registerAddress, registerValue, RegisterType.线圈);
+                        RegisterCollection.Add(register);
                     }
                     else
                     {
-                        value = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
-                        RegisterCollection.Add(new Register(registerAddress, value));
+                        register.Value = registerValue.ToString();
+                    }
+                    break;
+                case ModbusCommand.WriteMoreCoils:
+                    startAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
+                    count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
+                    registerValue = BitConverterHelper.ToUInt16(obj.Content, 5, EndianType.LittleEndian); // 这里用小端，便于移位处理
+
+                    content.AddRange(BitConverterHelper.GetBytes((UInt16)startAddress, EndianType.BigEndian));
+                    content.AddRange(BitConverterHelper.GetBytes((UInt16)(count), EndianType.BigEndian));
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType == RegisterType.线圈);
+                        if (register == null)
+                        {
+                            register = new Register(startAddress+i, (registerValue>>i)&1, RegisterType.线圈);
+                            RegisterCollection.Add(register);
+                        }
+                        else
+                        {
+                            register.Value = ((registerValue >> i) & 1).ToString();
+                        }
+                    }
+                    break;
+                case ModbusCommand.WriteOneHoldingRegister:
+                     registerAddress = BitConverterHelper.ToUInt16(obj.Content, 0, EndianType.BigEndian);
+                     registerValue = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian);
+                    content.AddRange(BitConverterHelper.GetBytes((UInt16)registerAddress, EndianType.BigEndian));
+                    content.AddRange(BitConverterHelper.GetBytes((UInt16)(registerValue), EndianType.BigEndian));
+                    register = RegisterCollection.SingleOrDefault(x => x.Address == registerAddress && x.RegisterType== RegisterType.保持寄存器);
+                    if (register == null)
+                    {
+                        register = new Register(registerAddress, registerValue, RegisterType.保持寄存器);
+                        RegisterCollection.Add(register);
+                    }
+                    else
+                    {
+                        register.Value = registerValue.ToString();
                     }
                     break;
                 case ModbusCommand.WriteMoreHoldingRegisters:
@@ -327,21 +410,21 @@ namespace WYW.RS232SOCKET.Models
                     count = BitConverterHelper.ToUInt16(obj.Content, 2, EndianType.BigEndian); // 寄存器数量
                     content.AddRange(BitConverterHelper.GetBytes((UInt16)startAddress, EndianType.BigEndian));
                     content.AddRange(BitConverterHelper.GetBytes((UInt16)(count), EndianType.BigEndian));
-
+                    // TODO 必须保持Master和Slave寄存器配置一致，否则会出现错乱
                     int index = 0;
                     while (index < count)
                     {
-                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + index);
-                        if (register != null)
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + index && x.RegisterType== RegisterType.保持寄存器);
+                        if (register == null)
                         {
-                            register.Value = register.GetValue(obj.Content, index * 2 + 5);
-                            index += register.RegisterCount;
+                            value = BitConverterHelper.ToUInt16(obj.Content, index * 2 + 5, EndianType.BigEndian);
+                            RegisterCollection.Add(new Register(startAddress + index, value, RegisterType.保持寄存器));
+                            index += 1;
                         }
                         else
                         {
-                            value = BitConverterHelper.ToUInt16(obj.Content, index * 2 + 5, EndianType.BigEndian);
-                            RegisterCollection.Add(new Register(startAddress + index, value));
-                            index += 1;
+                            register.Value = register.GetValue(obj.Content, index * 2 + 5);
+                            index += register.RegisterCount;
                         }
                     }
                     break;
@@ -352,7 +435,7 @@ namespace WYW.RS232SOCKET.Models
                     content.Add(((byte)(count * 2)));
                     for (int i = 0; i < count; i++)
                     {
-                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i);
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + i && x.RegisterType== RegisterType.保持寄存器);
                         if (register != null)
                         {
                             content.AddRange(register.GetBytes());
@@ -369,7 +452,7 @@ namespace WYW.RS232SOCKET.Models
                     index = 0;
                     while (index < count)
                     {
-                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + index);
+                        register = RegisterCollection.SingleOrDefault(x => x.Address == startAddress + index && x.RegisterType == RegisterType.保持寄存器);
                         if (register != null)
                         {
                             register.Value = register.GetValue(obj.Content, index * 2 + 9);
@@ -390,11 +473,11 @@ namespace WYW.RS232SOCKET.Models
             ProtocolBase response = null;
             if (obj is ModbusRTU)
             {
-                response = new ModbusRTU((byte)Modbus.SlaveID, cmd, content.ToArray());
+                response = new ModbusRTU((byte)Config.Modbus.SlaveID, cmd, content.ToArray());
             }
             else if (obj is ModbusTCP)
             {
-                response = new ModbusTCP((byte)Modbus.SlaveID, cmd, content.ToArray(), Modbus.TransactionID);
+                response = new ModbusTCP((byte)Config.Modbus.SlaveID, cmd, content.ToArray(), Config.Modbus.TransactionID);
             }
             Device.SendBytes(response.FullBytes);
         }
@@ -405,23 +488,30 @@ namespace WYW.RS232SOCKET.Models
 
         private TransferBase CreateClient()
         {
-            TransferBase client =null;
+            TransferBase client = null;
             switch (CommunicationType)
             {
                 case CommunicationType.RS232:
-                    client = new RS232Client(RS232.PortName, RS232.BaudRate, RS232.Parity, RS232.DataBits, RS232.StopBits, RS232.WriteBufferSize, RS232.ReceiveBufferSize);
+                    client = new RS232Client(Config.RS232.PortName, Config.RS232.BaudRate, Config.RS232.Parity, Config.RS232.DataBits, Config.RS232.StopBits, Config.RS232.WriteBufferSize, Config.RS232.ReceiveBufferSize);
                     break;
                 case CommunicationType.TCPClient:
-                    client = new TCPClient(TCPClient.RemoteIP, TCPClient.RemotePort, TCPClient.ReceiveBufferSize);
+                    client = new TCPClient(Config.TCPClient.RemoteIP, Config.TCPClient.RemotePort, Config.TCPClient.ReceiveBufferSize);
                     break;
                 case CommunicationType.TCPServer:
-                    client = new TCPServer(TCPServer.LocalIP, TCPServer.LocalPort, TCPServer.ReceiveBufferSize);
+                    client = new TCPServer(Config.TCPServer.LocalIP, Config.TCPServer.LocalPort, Config.TCPServer.ReceiveBufferSize);
                     break;
                 case CommunicationType.UDPClient:
-                    client = new UDPClient(UDPClient.LocalIP, UDPClient.LocalPort, UDPClient.BroadcastAddress, UDPClient.BroadcastPort, UDPClient.ReceiveBufferSize);
+                    client = new UDPClient(Config.UDPClient.LocalIP, Config.UDPClient.LocalPort, Config.UDPClient.BroadcastAddress, Config.UDPClient.BroadcastPort, Config.UDPClient.ReceiveBufferSize);
                     break;
                 case CommunicationType.UDPServer:
-                    client = new UDPServer(UDPServer.LocalIP, UDPServer.LocalPort, UDPServer.ReceiveBufferSize);
+                    client = new UDPServer(Config.UDPServer.LocalIP, Config.UDPServer.LocalPort, Config.UDPServer.ReceiveBufferSize);
+                    break;
+                case CommunicationType.VISA:
+                    if(string.IsNullOrEmpty(Config.VISA.ResourceName))
+                    {
+                        throw new Exception("资源名称不能为空");
+                    }
+                    client = new VISAClient(Config.VISA.ResourceName, true) { TerminationCharacter= Config.VISA.TerminationCharacter };
                     break;
             }
             return client;
@@ -431,440 +521,24 @@ namespace WYW.RS232SOCKET.Models
             if (ProtocolType == 1 || ProtocolType == 2)
             {
 
-                if (Modbus.StationType == StationType.主站)
+                if (Config.Modbus.StationType == StationType.主站)
                 {
-                    Device= new ModbusMaster(client, (ModbusProtocolType)ProtocolType);
+                    Device = new ModbusMaster(client, (ModbusProtocolType)ProtocolType);
                 }
                 else
                 {
-                    Device= new ModbusSlave(client, Modbus.SlaveID, (ModbusSlave.ModbusProtocolType)ProtocolType);
+                    Device = new ModbusSlave(client, Config.Modbus.SlaveID, (ModbusSlave.ModbusProtocolType)ProtocolType);
                 }
             }
             else
             {
-                Device=new Device(client);
+                Device = new Device(client);
             }
         }
- 
+
         #endregion
 
     }
 
-    class RS232Config : ObservableObject
-    {
-        private string portName;
-        private int baudRate = 9600;
-        private int parity = 0;
-        private int dataBits = 8;
-        private int stopBits = 1;
-        private int writeBufferSize = 4096;
-        private int receiveBufferSize = 4096;
-        /// <summary>
-        /// 
-        /// </summary>
-        public string PortName
-        {
-            get => portName;
-            set => SetProperty(ref portName, value);
-        }
-        /// <summary>
-        /// 波特率
-        /// </summary>
-        public int BaudRate
-        {
-            get => baudRate;
-            set => SetProperty(ref baudRate, value);
-        }
-        /// <summary>
-        /// 奇偶校验位，0 None；1 Odd；2 Even；4 Mark；5 Space
-        /// </summary>
-        public int Parity
-        {
-            get => parity;
-            set => SetProperty(ref parity, value);
-        }
-        /// <summary>
-        /// 数据位，取值范围[5,8]
-        /// </summary>
-        public int DataBits
-        {
-            get => dataBits;
-            set => SetProperty(ref dataBits, value);
-        }
-        /// <summary>
-        /// 停止位，0 HexBare；1 One；2 Two；3 OnePointFive,
-        /// </summary>
-        public int StopBits
-        {
-            get => stopBits;
-            set => SetProperty(ref stopBits, value);
-        }
 
-        /// <summary>
-        /// 写缓存
-        /// </summary>
-        public int WriteBufferSize
-        {
-            get => writeBufferSize;
-            set => SetProperty(ref writeBufferSize, value);
-        }
-
-        /// <summary>
-        /// 读缓存
-        /// </summary>
-        public int ReceiveBufferSize
-        {
-            get => receiveBufferSize;
-            set => SetProperty(ref receiveBufferSize, value);
-        }
-    }
-    class TCPClientConfig : ObservableObject
-    {
-        private string remoteIP;
-        private int remotePort = 502;
-        private int receiveBufferSize = 4096;
-        /// <summary>
-        /// 
-        /// </summary>
-        public string RemoteIP
-        {
-            get => remoteIP;
-            set => SetProperty(ref remoteIP, value);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        public int RemotePort
-        {
-            get => remotePort;
-            set => SetProperty(ref remotePort, value);
-        }
-        /// <summary>
-        /// 读缓存
-        /// </summary>
-        public int ReceiveBufferSize
-        {
-            get => receiveBufferSize;
-            set => SetProperty(ref receiveBufferSize, value);
-        }
-    }
-    class TCPServerConfig : ObservableObject
-    {
-        private string localIP;
-        private int localPort = 502;
-        private int receiveBufferSize = 4096;
-        /// <summary>
-        /// 
-        /// </summary>
-        public string LocalIP
-        {
-            get => localIP;
-            set => SetProperty(ref localIP, value);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        public int LocalPort
-        {
-            get => localPort;
-            set => SetProperty(ref localPort, value);
-        }
-        /// <summary>
-        /// 读缓存
-        /// </summary>
-        public int ReceiveBufferSize
-        {
-            get => receiveBufferSize;
-            set => SetProperty(ref receiveBufferSize, value);
-        }
-    }
-    class UDPClientConfig : ObservableObject
-    {
-        private string localIP;
-        private int localPort = 502;
-
-        private string broadcastAddress;
-        private int broadcastPort;
-        private int receiveBufferSize = 4096;
-        /// <summary>
-        /// 广播地址
-        /// </summary>
-        public string BroadcastAddress
-        {
-            get => broadcastAddress;
-            set => SetProperty(ref broadcastAddress, value);
-        }
-
-        /// <summary>
-        /// 广播端口
-        /// </summary>
-        public int BroadcastPort
-        {
-            get => broadcastPort;
-            set => SetProperty(ref broadcastPort, value);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        public string LocalIP
-        {
-            get => localIP;
-            set => SetProperty(ref localIP, value);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        public int LocalPort
-        {
-            get => localPort;
-            set => SetProperty(ref localPort, value);
-        }
-        /// <summary>
-        /// 读缓存
-        /// </summary>
-        public int ReceiveBufferSize
-        {
-            get => receiveBufferSize;
-            set => SetProperty(ref receiveBufferSize, value);
-        }
-    }
-    class UDPServerConfig : TCPServerConfig
-    {
-
-    }
-    class DisplayConfig : ObservableObject
-    {
-
-        private int maxMessageCount = 18;
-
-        /// <summary>
-        /// 最大显示的条目数量
-        /// </summary>
-        public int MaxMessageCount
-        {
-            get => maxMessageCount;
-            set => SetProperty(ref maxMessageCount, value);
-        }
-
-        private int displayType=1;
-
-        /// <summary>
-        /// 显示类型，0 Hex；1 UTF-8
-        /// </summary>
-        public int DisplayType
-        {
-            get => displayType;
-            set => SetProperty(ref displayType, value);
-        }
-
-        private bool enableDisplay = true;
-
-        /// <summary>
-        /// 启用窗口显示
-        /// </summary>
-        public bool EnableDisplay
-        {
-            get => enableDisplay;
-            set => SetProperty(ref enableDisplay, value);
-        }
-
-    }
-    class SendConfig : ObservableObject
-    {
-        private bool isCyclic;
-        private int cyclicInterval = 1000;
-        private string sendText;
-        private ProtocolType protocolType= ProtocolType.UTF8;
-        private int responseTimeout = 200;
-        /// <summary>
-        /// 是否循环
-        /// </summary>
-        public bool IsCyclic
-        {
-            get => isCyclic;
-            set => SetProperty(ref isCyclic, value);
-        }
-
-        /// <summary>
-        /// 循环间隔时间，单位ms
-        /// </summary>
-        public int CyclicInterval
-        {
-            get => cyclicInterval;
-            set => SetProperty(ref cyclicInterval, value);
-        }
-
-        /// <summary>
-        /// 发送栏文本
-        /// </summary>
-        public string SendText
-        {
-            get => sendText;
-            set => SetProperty(ref sendText, value);
-        }
-
-        /// <summary>
-        /// 校验类型
-        /// </summary>
-        public ProtocolType ProtocolType
-        {
-            get => protocolType;
-            set => SetProperty(ref protocolType, value);
-        }
-
-
-        private bool isSendFile;
-
-        /// <summary>
-        /// 如果发送文件，SendText显示发送文件的路径
-        /// </summary>
-        public bool IsSendFile
-        {
-            get => isSendFile;
-            set => SetProperty(ref isSendFile, value);
-        }
-        /// <summary>
-        /// 应答超时时间，单位ms
-        /// </summary>
-        public int ResponseTimeout
-        {
-            get => responseTimeout;
-            set => SetProperty(ref responseTimeout, value);
-        }
-    }
-    class ReceiveConfig : ObservableObject
-    {
-        private bool isAutoResponse;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsAutoResponse { get => isAutoResponse; set => SetProperty(ref isAutoResponse, value); }
-
-        /// <summary>
-        /// 应答对象字典，Key是接收，Value是应答
-        /// </summary>
-        public Dictionary<string, byte[]> Response { get; set; } = new Dictionary<string, byte[]>();
-        private ProtocolType protocolType;
-        /// <summary>
-        /// 校验类型
-        /// </summary>
-        public ProtocolType ProtocolType
-        {
-            get => protocolType;
-            set => SetProperty(ref protocolType, value);
-        }
-    }
-    class StatusConfig : ObservableObject
-    {
-        private int totalReceived;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int TotalReceived
-        {
-            get => totalReceived;
-            set => SetProperty(ref totalReceived, value);
-        }
-
-        private int totalSended;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public int TotalSended
-        {
-            get => totalSended;
-            set => SetProperty(ref totalSended, value);
-        }
-
-        private double progress;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public double Progress
-        {
-            get => progress;
-            set => SetProperty(ref progress, value);
-        }
-
-        private string message;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Message { get => message; set => SetProperty(ref message, value); }
-
-        private Visibility progressBarVisibility= Visibility.Collapsed;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public Visibility ProgressBarVisibility { get => progressBarVisibility; set => SetProperty(ref progressBarVisibility, value); }
-
-
-    }
-    class ModbusConfig : ObservableObject
-    {
-        private StationType stationType;
-        private byte slaveID = 1;
-        private UInt16 transactionID;
-   
-        /// <summary>
-        /// 工作站类型
-        /// </summary>
-        public StationType StationType
-        {
-            get => stationType;
-            set => SetProperty(ref stationType, value);
-        }
-
-
-        /// <summary>
-        /// 从站节点编号
-        /// </summary>
-        public byte SlaveID
-        {
-            get => slaveID;
-            set => SetProperty(ref slaveID, value);
-        }
-
-        /// <summary>
-        /// 事务标识符
-        /// </summary>
-        public UInt16 TransactionID
-        {
-            get => transactionID;
-            set => SetProperty(ref transactionID, value);
-        }
-
-        private bool isSupportMultiWriteCommand=true;
-
-        /// <summary>
-        /// 是否支持写多个寄存器或线圈指令，例如0x10、0x0F
-        /// </summary>
-        public bool IsSupportMultiWriteCommand { get => isSupportMultiWriteCommand; set => SetProperty(ref isSupportMultiWriteCommand, value); }
-
-    }
-
-    class RegisterConfig:ObservableObject
-    {
-        private int startAddress;
-        private int registerCount = 10;
-        /// <summary>
-        /// 起始地址
-        /// </summary>
-        public int StartAddress
-        {
-            get => startAddress;
-            set => SetProperty(ref startAddress, value);
-        }
-        /// <summary>
-        /// 寄存器个数
-        /// </summary>
-        public int RegisterCount { get => registerCount; set => SetProperty(ref registerCount, value); }
-
-    }
 }

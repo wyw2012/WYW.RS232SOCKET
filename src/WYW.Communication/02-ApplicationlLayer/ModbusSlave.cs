@@ -53,6 +53,20 @@ namespace WYW.Communication
         }
 
         #region 公共方法
+
+        /// <summary>
+        /// 响应写单个线圈指令
+        /// </summary>
+        /// <param name="address">寄存器地址</param>
+        /// <param name="value">寄存器值</param>
+        /// <param name="transactionID">事务处理标识，2字节，大端对齐</param>
+        public void ResponseWriteOneCoil(UInt16 address, UInt16 value, UInt16 transactionID = 0)
+        {
+            List<byte> content = new List<byte>();
+            content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
+            content.AddRange(BitConverterHelper.GetBytes(value, EndianType.BigEndian));
+            SendCommand(ModbusCommand.WriteOneCoil, content.ToArray(), transactionID);
+        }
         /// <summary>
         /// 响应读保持寄存器指令
         /// </summary>

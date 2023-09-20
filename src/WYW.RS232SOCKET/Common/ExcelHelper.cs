@@ -1,18 +1,14 @@
 ﻿using GemBox.Spreadsheet;
-using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WYW.RS232SOCKET.Common
 {
     internal class ExcelHelper
     {
-        private static readonly string License = "E02V-XUB1-52LA-994F";
+        public static readonly string License = "E02V-XUB1-52LA-994F";
         public static void DataTableToExcel(DataTable dataTable, string fileName, byte[] excelTemplate=null)
         {
             SpreadsheetInfo.SetLicense(License);

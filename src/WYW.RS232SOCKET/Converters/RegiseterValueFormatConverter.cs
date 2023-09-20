@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows.Data;
@@ -20,8 +21,9 @@ namespace WYW.RS232SOCKET.Converters
                 {
                     return $"{register.GetBytes().ToHexString()}";
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Debug.WriteLine(ex.Message);
                 }
 
             }

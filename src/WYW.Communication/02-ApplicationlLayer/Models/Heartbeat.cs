@@ -19,7 +19,6 @@ namespace WYW.Communication.ApplicationlLayer
         /// <summary>
         /// 超时时间，单位：ms，默认300ms
         /// </summary>
-
         public int Timeout { get; set; } = 300;
         /// <summary>
         /// 最大重试次数，默认为3
@@ -35,7 +34,7 @@ namespace WYW.Communication.ApplicationlLayer
         /// </summary>
         public int IntervalSeconds { get; set; } = 5;
         /// <summary>
-        /// 心跳事件触发条件，默认始终触发
+        /// 心跳事件触发条件，默认状态改变时触发
         /// </summary>
         public HeartbeatTriggerCondition HeartbeatTriggerCondition { get; set; }
     }

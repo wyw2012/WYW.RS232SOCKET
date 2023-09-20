@@ -15,17 +15,17 @@ namespace WYW.RS232SOCKET.ViewModels
     partial class ModbusViewModel : ViewModelBase
     {
         private CancellationTokenSource token = null;
-        public ModbusViewModel(DeviceController controler)
+        public ModbusViewModel()
         {
-            Controller = controler;
-
+      
         }
         #region  属性
-        public DeviceController Controller { get; }
-
-
+        public DeviceController Controller { get; } = Ioc.Controller;
         private bool isSelectAll = true;
         private int selectedIndex = -1;
+        private bool isExpanded = true;
+        private string registerStartAddress = "0";
+        private int registerCount = 10;
         /// <summary>
         /// 是否全部选中
         /// </summary>
@@ -43,29 +43,22 @@ namespace WYW.RS232SOCKET.ViewModels
         }
 
         /// <summary>
-        /// 
+        /// 当前选择的索引，用于删除寄存器
         /// </summary>
         public int SelectedIndex { get => selectedIndex; set => SetProperty(ref selectedIndex, value); }
 
-        private bool isExpanded = true;
-
         /// <summary>
-        /// 
+        /// Expender控件是否扩展
         /// </summary>
         public bool IsExpanded { get => isExpanded; set => SetProperty(ref isExpanded, value); }
 
-
-        private string registerStartAddress = "0";
-
         /// <summary>
-        /// 
+        /// 寄存器起始地址
         /// </summary>
         public string RegisterStartAddress { get => registerStartAddress; set => SetProperty(ref registerStartAddress, value); }
 
-        private int registerCount = 10;
-
         /// <summary>
-        /// 
+        /// 寄存器数量
         /// </summary>
         public int RegisterCount { get => registerCount; set => SetProperty(ref registerCount, value); }
 
@@ -94,8 +87,6 @@ namespace WYW.RS232SOCKET.ViewModels
         public RelayCommand WriteRegisterCommand { get; private set; }
         public RelayCommand StopReadWriteCommand { get; private set; }
 
-
-
         private void CreateRegister()
         {
             MessageControl.Clear();
@@ -116,6 +107,7 @@ namespace WYW.RS232SOCKET.ViewModels
                 {
                     startAddress = Convert.ToInt32(RegisterStartAddress, 10);
                 }
+
 
                 for (int i = 0; i < RegisterCount; i++)
                 {
@@ -179,7 +171,6 @@ namespace WYW.RS232SOCKET.ViewModels
                 }
             }
         }
-
         private void SaveTemplate()
         {
             MessageControl.Clear();
@@ -224,16 +215,17 @@ namespace WYW.RS232SOCKET.ViewModels
             {
                 token = new CancellationTokenSource();
                 IsRunning = true;
-                if(Controller.Send.IsCyclic)
+                if (Controller.Config.Send.IsCyclic)
                 {
                     IsExpanded = false;
                 }
-              
+
                 ModbusMaster master = Controller.Device as ModbusMaster;
                 do
                 {
                     if (Controller.Device == null || !Controller.Device.Client.IsOpen)
                     {
+                        MessageControl.Warning("设备已关闭");
                         return;
                     }
                     if (token?.Token.IsCancellationRequested == true)
@@ -243,22 +235,26 @@ namespace WYW.RS232SOCKET.ViewModels
                     }
                     try
                     {
-                        master.ReadRegisterCollection(Controller.Modbus.SlaveID, Controller.RegisterCollection, Controller.Send.ResponseTimeout, token, Controller.Send.IsCyclic);
-
+                        Controller.Config.Display.LastReceive = "";
+                        master.ReadRegisterCollection(Controller.Config.Modbus.SlaveID, Controller.RegisterCollection, Controller.Config.Send.ResponseTimeout, token, Controller.Config.Send.IsCyclic);
+                        if (!Controller.Config.Send.IsCyclic)
+                        {
+                            MessageControl.Success("读寄存器成功");
+                            return;
+                        }
                     }
                     catch (Exception ex)
                     {
                         MessageControl.Error(ex.Message);
                     }
 
-                    if (Controller.Send.IsCyclic)
-                    {
-                        Thread.Sleep(Controller.Send.CyclicInterval);
-                    }
+
+                    Thread.Sleep(Controller.Config.Send.CyclicInterval);
+
 
                 }
-                while (Controller.Send.IsCyclic);
-                MessageControl.Success("读寄存器成功");
+                while (Controller.Config.Send.IsCyclic);
+
             }).ContinueWith(ProcessWhenTaskCompleted);
         }
 
@@ -269,52 +265,47 @@ namespace WYW.RS232SOCKET.ViewModels
 
             Task.Run(() =>
             {
-                try
+                token = new CancellationTokenSource();
+                IsRunning = true;
+                if (Controller.Config.Send.IsCyclic)
                 {
-                    token = new CancellationTokenSource();
-                    IsRunning = true;
-                    if (Controller.Send.IsCyclic)
+                    IsExpanded = false;
+                }
+
+                ModbusMaster master = Controller.Device as ModbusMaster;
+
+                do
+                {
+                    if (Controller.Device == null || !Controller.Device.Client.IsOpen)
                     {
-                        IsExpanded = false;
+                        MessageControl.Warning("设备已关闭");
+                        return;
                     }
-
-                    ModbusMaster master = Controller.Device as ModbusMaster;
-
-                    do
+                    if (token?.Token.IsCancellationRequested == true)
                     {
-                        if (!Controller.Device.Client.IsOpen)
+                        MessageControl.Success("手动取消成功");
+                        return;
+                    }
+                    try
+                    {
+                        Controller.Config.Display.LastReceive = "";
+                        master.WriteRegisterCollection(Controller.Config.Modbus.SlaveID, Controller.RegisterCollection, Controller.Config.Send.ResponseTimeout, Controller.Config.Modbus.IsSupportMultiWriteCommand, token, Controller.Config.Send.IsCyclic);
+                        if (!Controller.Config.Send.IsCyclic)
                         {
-                            MessageControl.Success("设备已关闭");
+                            MessageControl.Success("写寄存器成功");
                             return;
                         }
-                        if (token?.Token.IsCancellationRequested == true)
-                        {
-                            MessageControl.Success("手动取消成功");
-                            return;
-                        }
-                        try
-                        {
-                            master.WriteRegisterCollection(Controller.Modbus.SlaveID, Controller.RegisterCollection, Controller.Send.ResponseTimeout, Controller.Modbus.IsSupportMultiWriteCommand, token, Controller.Send.IsCyclic);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageControl.Error(ex.Message);
-                        }
-
-                        if (Controller.Send.IsCyclic)
-                        {
-                            Thread.Sleep(Controller.Send.CyclicInterval);
-                        }
                     }
-                    while (Controller.Send.IsCyclic);
+                    catch (Exception ex)
+                    {
+                        MessageControl.Error(ex.Message);
+                    }
 
-                    MessageControl.Success("写寄存器成功");
-                    IsRunning = false;
+                    Thread.Sleep(Controller.Config.Send.CyclicInterval);
+
                 }
-                catch (Exception ex)
-                {
-                    MessageControl.Error($"{ex.Message}");
-                }
+                while (Controller.Config.Send.IsCyclic);
+
             }).ContinueWith(ProcessWhenTaskCompleted);
 
         }
@@ -330,9 +321,5 @@ namespace WYW.RS232SOCKET.ViewModels
             IsExpanded = true;
             base.ProcessWhenTaskCompleted(task);
         }
-        #region 私有方法
-
-
-        #endregion
     }
 }

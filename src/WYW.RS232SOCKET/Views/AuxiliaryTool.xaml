@@ -1,0 +1,129 @@
+﻿<UserControl x:Class="WYW.RS232SOCKET.Views.AuxiliaryTool"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WYW.RS232SOCKET.Views"
+             mc:Ignorable="d" 
+              xmlns:wyw="http://wangyanwei.com/ui"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid DataContext="{Binding AuxiliaryToolViewModel}">
+        <ScrollViewer>
+            <Grid Margin="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <Expander Header="时钟配置" Margin="0,0,0,20"  IsExpanded="False">
+                        <StackPanel>
+                            <ToggleButton Style="{StaticResource SwitchButtonStyle}"
+                                              wyw:ToggleButtonElement.Title="高性能计数器"
+                                              Command="{Binding SetHighTimerResolutionCommand}"                                             
+                                          CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"/>
+                            <Grid Height="50" Margin="0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="0.2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="查询时钟分辨率"  Command="{Binding QueryTimerResolutionCommand}"/>
+                                <Button Grid.Column="2" Content="检测休眠效果" Command="{Binding CheckSleepEffectCommand}"/>
+                            </Grid>
+                        </StackPanel>
+
+                    </Expander>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <Expander Header="IP扫描" Margin="0,0,0,20"  IsExpanded="False">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <ComboBox wyw:ComboBoxElement.Title="地址段"  SelectedItem="{Binding ScanIPPrefix}"
+                                          ItemsSource="{Binding IPPrefixList}"/>
+                          
+                                <Grid Height="50" Margin="0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="0.2*"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Content="开始扫描" Command="{Binding StartScanIPCommand}" 
+                                            IsEnabled="{Binding IsRunning,Converter={StaticResource ConstToReverseBooleanConverter}}"/>
+                                    <Button Grid.Column="2" Content="停止扫描" Command="{Binding StopCommand}"/>
+                                </Grid>
+                            </StackPanel>
+                            <TextBox Grid.Column="2"  VerticalContentAlignment="Top"
+                                     TextWrapping="Wrap"
+                                     Text="{Binding ScanIPResult}"/>
+                        </Grid>
+
+                    </Expander>
+                    <Expander Header="端口扫描" Margin="0,0,0,20"  IsExpanded="False">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBox wyw:TextBoxElement.Title="目标地址" Text="{Binding ScanIP}"/>
+                                <TextBox wyw:TextBoxElement.Title="起始端口" Text="{Binding StartPort}"/>
+                                <TextBox wyw:TextBoxElement.Title="终止端口" Text="{Binding StopPort}"/>
+                                <TextBox wyw:TextBoxElement.Title="单次超时(ms)" Text="{Binding ScanTimeout}"/>
+                                <Grid Height="50" Margin="0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="0.2*"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Content="开始扫描" Command="{Binding StartScanPortCommand}" 
+                                            IsEnabled="{Binding IsRunning,Converter={StaticResource ConstToReverseBooleanConverter}}"/>
+                                    <Button Grid.Column="2" Content="停止扫描" Command="{Binding StopCommand}"/>
+                                </Grid>
+                            </StackPanel>
+                            <TextBox Grid.Column="2"  VerticalContentAlignment="Top"
+                                     TextWrapping="Wrap"
+                                     Text="{Binding ScanResult}"/>
+                        </Grid>
+                    
+                    </Expander>
+                    <Expander Header="Ping测试" Margin="0,0,0,20"  IsExpanded="False">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBox wyw:TextBoxElement.Title="Ping地址" Text="{Binding PingIP}"/>
+                                <TextBox wyw:TextBoxElement.Title="Ping字节" Text="{Binding PingBytesLength}"/>
+                                <TextBox wyw:TextBoxElement.Title="Ping次数" Text="{Binding PingCount}"/>
+                                <Grid Height="50" Margin="0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="0.2*"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Content="开始测试" Command="{Binding StartPingCommand}" 
+                                            IsEnabled="{Binding IsRunning,Converter={StaticResource ConstToReverseBooleanConverter}}"/>
+                                    <Button Grid.Column="2" Content="停止测试" Command="{Binding StopCommand}"/>
+                                </Grid>
+                            </StackPanel>
+                            <TextBox Grid.Column="2"  VerticalContentAlignment="Top"
+                                     TextWrapping="Wrap"
+                                     Text="{Binding PingResult}"/>
+                        </Grid>
+
+                    </Expander>
+                </StackPanel>
+            </Grid>
+            
+        </ScrollViewer>   
+    </Grid>
+</UserControl>

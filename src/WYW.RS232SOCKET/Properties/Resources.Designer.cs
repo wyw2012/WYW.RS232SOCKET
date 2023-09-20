@@ -63,6 +63,16 @@ namespace WYW.RS232SOCKET.Properties {
         /// <summary>
         ///   查找 System.Byte[] 类型的本地化资源。
         /// </summary>
+        public static byte[] NormalScriptTemplate {
+            get {
+                object obj = ResourceManager.GetObject("NormalScriptTemplate", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
         public static byte[] ResponseTemplate {
             get {
                 object obj = ResourceManager.GetObject("ResponseTemplate", resourceCulture);

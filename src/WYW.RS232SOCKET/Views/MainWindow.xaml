@@ -24,15 +24,35 @@
                      wyw:TabItemElement.IcoGeometry="{StaticResource ConfigGeometry}">
                 <local:ConfigView/>
             </TabItem>
-            <TabItem Header="通用功能" 
+            <TabItem Header="常规通讯" 
                      Visibility="{Binding Controller.ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='0'}"
-                     wyw:TabItemElement.IcoGeometry="{StaticResource LoveGeometry}">
+                     wyw:TabItemElement.IcoGeometry="{StaticResource NetworkTopologyGeometry}">
                 <local:CommonView/>
             </TabItem>
-            <TabItem Header="Modbus" 
+            <TabItem Header="Modbus"
                      Visibility="{Binding Controller.ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='1 2'}"
-                     wyw:TabItemElement.IcoGeometry="{StaticResource MoreGeometry}">
+                     wyw:TabItemElement.IcoGeometry="{StaticResource RelayGeometry}">
                 <local:ModbusView/>
+            </TabItem>
+            <!--常规测试脚本-->
+            <TabItem Header="测试脚本" 
+                     Visibility="{Binding Controller.ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='0'}"
+                     wyw:TabItemElement.IcoGeometry="{StaticResource TestGeometry}">
+                <local:NormalScript/>
+            </TabItem>
+            <!--Modbus测试脚本-->
+            <TabItem Header="测试脚本" 
+                     Visibility="{Binding Controller.ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='1 2'}"
+                     wyw:TabItemElement.IcoGeometry="{StaticResource TestGeometry}">
+                <local:ModbusScript/>
+            </TabItem>
+            <TabItem Header="编码转换" 
+                     wyw:TabItemElement.IcoGeometry="{StaticResource ConvertGeometry}">
+                <local:ProtocolConvertView/>
+            </TabItem>
+            <TabItem Header="辅助工具" 
+                     wyw:TabItemElement.IcoGeometry="{StaticResource UtilitiesGeometry}">
+                <local:AuxiliaryTool/>
             </TabItem>
         </TabControl>
 
@@ -47,9 +67,10 @@
                     <ColumnDefinition Width="2*"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock  Grid.Column="1" Text="{Binding Controller.Status.TotalSended,StringFormat={}Tx：{0}  字节}"/>
-                <TextBlock  Grid.Column="2" Text="{Binding Controller.Status.TotalReceived,StringFormat={}Rx：{0}  字节}" />
-                <ProgressBar Grid.Column="4" Value="{Binding Controller.Status.Progress}"  Visibility="{Binding Controller.Status.ProgressBarVisibility}" />
+                <TextBlock  Grid.Column="1" Text="{Binding Controller.Config.Status.TotalSended,StringFormat={}Tx：{0}  字节}"/>
+                <TextBlock  Grid.Column="2" Text="{Binding Controller.Config.Status.TotalReceived,StringFormat={}Rx：{0}  字节}" />
+                <ProgressBar Grid.Column="4" Value="{Binding Controller.Config.Status.Progress}"  Visibility="{Binding Controller.Config.Status.ProgressBarVisibility}" />
+          
                 <Border Grid.Column="6" BorderThickness="1,0,0,0" >
                     <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" >
                             <Hyperlink NavigateUri="http://www.wangyanwei.com" RequestNavigate="Hyperlink_RequestNavigate">

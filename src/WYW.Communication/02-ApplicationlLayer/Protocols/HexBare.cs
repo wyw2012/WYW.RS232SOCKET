@@ -13,7 +13,7 @@ namespace WYW.Communication.Protocol
     {
         #region 子类必须实现的
  
-        internal HexBare(byte[] fullBytes)
+        public HexBare(byte[] fullBytes)
         {
             FullBytes = fullBytes;
             Content = fullBytes;

@@ -45,9 +45,9 @@ namespace WYW.Communication.TransferLayer
         public string LogFolder { get; set; } = "Log\\Commucation";
 
         /// <summary>
-        /// 是否手动接收数据，默认自动读取数据，然后通过<see cref="DataReceivedEvent"/>事件通知订阅者
+        /// 是否自动接收数据，默认自动读取数据，然后通过<see cref="DataReceivedEvent"/>事件通知订阅者
         /// </summary>
-        public bool IsManulReceiveData { get; protected set; }
+        public bool IsAutoReceiveData { get; protected set; } = true;
         #endregion
 
         #region  公共事件

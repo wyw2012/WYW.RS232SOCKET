@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using DataReceivedEventArgs = WYW.Communication.TransferLayer.DataReceivedEventArgs;
 using WYW.Communication.ApplicationlLayer;
 using System.Threading.Tasks;
+using Ivi.Visa;
 
 namespace WYW.Communication
 {
@@ -46,7 +47,7 @@ namespace WYW.Communication
         #endregion
 
         #region  属性
-        private DeviceStatus deviceStatus= DeviceStatus.UnConnected;
+        private DeviceStatus deviceStatus = DeviceStatus.UnConnected;
         private bool isConnected;
         private bool logEnabled;
         /// <summary>
@@ -76,7 +77,7 @@ namespace WYW.Communication
         /// </summary>
         public int DeviceID { get; set; }
 
-        public TransferBase Client { get;}
+        public TransferBase Client { get; }
         /// <summary>
         /// 设备状态
         /// </summary>
@@ -85,7 +86,7 @@ namespace WYW.Communication
         /// <summary>
         /// 心跳配置
         /// </summary>
-       public Heartbeat Heartbeat { get; }=new Heartbeat();
+        public Heartbeat Heartbeat { get; } = new Heartbeat();
         /// <summary>
         /// 是否启用日志
         /// </summary>
@@ -105,7 +106,7 @@ namespace WYW.Communication
         /// <summary>
         /// 应用层协议类型
         /// </summary>
-        public ProtocolType ProtocolType { get; protected set; }
+        public ProtocolType ProtocolType { get; set; }
         /// <summary>
         /// 最后一次接收到数据时间
         /// </summary>
@@ -152,13 +153,24 @@ namespace WYW.Communication
             {
                 Client.Open();
                 Client.DataReceivedEvent += Client_DataReceivedEvent;
+                Client.StatusChangedEvent += Client_StatusChangedEvent;
                 isOpened = true;
                 heartbeatThread = new Thread(StartHeartbeat) { IsBackground = true };
                 heartbeatThread.Start();
                 sendThread = new Thread(ProcessSendQueue) { IsBackground = true };
                 sendThread.Start();
+
             }
         }
+
+        private void Client_StatusChangedEvent(object sender, StatusChangedEventArgs e)
+        {
+            if (LogEnabled)
+            {
+                Logger.WriteLine(LogFolder, e.ToString());
+            }
+        }
+
         /// <summary>
         /// 关闭设备
         /// </summary>
@@ -177,6 +189,7 @@ namespace WYW.Communication
             if (Client != null)
             {
                 Client.DataReceivedEvent -= Client_DataReceivedEvent;
+                Client.StatusChangedEvent -= Client_StatusChangedEvent;
                 Client.Close();
                 isOpened = false;
                 IsConnected = false;
@@ -184,6 +197,7 @@ namespace WYW.Communication
                 heartbeatThread = null;
                 isKeepSendThreadAlive = false;
                 sendThread = null;
+
             }
         }
         /// <summary>
@@ -201,58 +215,7 @@ namespace WYW.Communication
             }
         }
 
-        /// <summary>
-        /// 发送数据
-        /// </summary>
-        /// <param name="sendObject">发送对象</param>
-        /// <param name="isNeedResponse">是否需要应答</param>
-        /// <param name="maxSendCount">最大发送次数</param>
-        /// <param name="responseTimeout">单次发送超时时间，单位ms</param>
-        /// <returns>通过IsSuccess判断是否发送成功，Response返回应答数据</returns>
-        public ExecutionResult SendProtocol(ProtocolBase sendObject, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
-        {
-            if (IsDebugModel)
-            {
-                return ExecutionResult.Success(null);
-            }
 
-            if (sendObject.GetType().Name != ProtocolType.ToString())
-            {
-                throw new ArgumentException("发送的对象类型与协议类型不匹配");
-            }
-            ProtocolTransmitModel arg = new ProtocolTransmitModel(sendObject)
-            {
-                MaxSendCount = maxSendCount,
-                ResponseTimeout = responseTimeout,
-                IsNeedResponse = isNeedResponse,
-            };
-
-            SendQueue.Enqueue(arg);
-            CheckSendThread();
-            if (arg.IsNeedResponse)
-            {
-                while (!arg.HasReceiveResponse)
-                {
-                    // 超时退出
-                    if ((DateTime.Now - arg.CreateTime).TotalMilliseconds > arg.MaxSendCount * arg.ResponseTimeout)
-                    {
-                        break;
-                    }
-                    Thread.Sleep(1);
-                }
-                if (arg.HasReceiveResponse)
-                {
-                    return ExecutionResult.Success(arg.ResponseBody);
-                }
-                else
-                {
-                    DeviceStatus = DeviceStatus.Warning;
-                    return ExecutionResult.Failed("通讯超时");
-                }
-
-            }
-            return ExecutionResult.Success(null);
-        }
         /// <summary>
         /// 发送字节
         /// </summary>
@@ -265,7 +228,41 @@ namespace WYW.Communication
             };
             Write(arg);
         }
-
+        /// <summary>
+        /// 发送字符串指令。该方法根据ProtocolType自动包装
+        /// </summary>
+        /// <param name="command">命令的有效字符串，如果为Hexbare，则字符串则为16进制格式字符串</param>
+        /// <param name="isNeedResponse">是否需要应答</param>
+        /// <param name="maxSendCount">最大发送次数</param>
+        /// <param name="responseTimeout">单次发送超时时间，单位ms</param>
+        /// <returns>通过IsSuccess判断是否发送成功，Response返回应答数据</returns>
+        /// <returns></returns>
+        public ExecutionResult SendCommand(string command, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
+        {
+            ProtocolBase obj = null;
+            switch (ProtocolType)
+            {
+                case ProtocolType.HexBare:
+                    obj = new HexBare(command.ToHexArray());
+                    break;
+                case ProtocolType.AsciiBare:
+                    obj = new AsciiBare(command);
+                    break;
+                case ProtocolType.AsciiCR:
+                    obj = new AsciiCR(command);
+                    break;
+                case ProtocolType.AsciiLF:
+                    obj = new AsciiLF(command);
+                    break;
+                case ProtocolType.AsciiCRLF:
+                    obj = new AsciiCRLF(command);
+                    break;
+                case ProtocolType.AsciiCheckSum:
+                    obj = new AsciiCheckSum(command);
+                    break;
+            }
+            return SendProtocol(obj, isNeedResponse, maxSendCount, responseTimeout);
+        }
         /// <summary>
         /// 释放资源，取消强事件订阅
         /// </summary>
@@ -304,10 +301,7 @@ namespace WYW.Communication
         }
         protected virtual void OnHeartbeatTriggered(ExecutionResult result)
         {
-            Task.Run(() =>
-            {
-                HeartbeatTriggeredEvent?.Invoke(this,result);
-            });
+
         }
         protected virtual void Dispose(bool disposing)
         {
@@ -319,6 +313,59 @@ namespace WYW.Communication
                 }
                 disposed = true;
             }
+        }
+
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="sendObject">发送对象</param>
+        /// <param name="isNeedResponse">是否需要应答</param>
+        /// <param name="maxSendCount">最大发送次数</param>
+        /// <param name="responseTimeout">单次发送超时时间，单位ms</param>
+        /// <returns>通过IsSuccess判断是否发送成功，Response返回应答数据</returns>
+        protected ExecutionResult SendProtocol(ProtocolBase sendObject, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
+        {
+            if (IsDebugModel)
+            {
+                return ExecutionResult.Success(null);
+            }
+
+            if (sendObject.GetType().Name != ProtocolType.ToString())
+            {
+                throw new ArgumentException("发送的对象类型与协议类型不匹配，请设置属性ProtocolType");
+            }
+            ProtocolTransmitModel arg = new ProtocolTransmitModel(sendObject)
+            {
+                MaxSendCount = maxSendCount,
+                ResponseTimeout = responseTimeout,
+                IsNeedResponse = isNeedResponse,
+            };
+
+            SendQueue.Enqueue(arg);
+            CheckSendThread();
+            if (arg.IsNeedResponse)
+            {
+                while (!arg.HasReceiveResponse)
+                {
+                    // 超时退出
+                    if ((DateTime.Now - arg.CreateTime).TotalMilliseconds > arg.MaxSendCount * arg.ResponseTimeout)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(1);
+                }
+                if (arg.HasReceiveResponse)
+                {
+                    return ExecutionResult.Success(arg.ResponseBody);
+                }
+                else
+                {
+                    DeviceStatus = DeviceStatus.Warning;
+                    return ExecutionResult.Failed(Properties.Message.CommunicationTimeout);
+                }
+
+            }
+            return ExecutionResult.Success(null);
         }
         #endregion
 
@@ -350,7 +397,7 @@ namespace WYW.Communication
                             {
                                 Write(cmd);
                                 // 如果手动接收数据，则调用读取方法
-                                if (Client.IsManulReceiveData)
+                                if (!Client.IsAutoReceiveData)
                                 {
                                     Client.Read(cmd.ResponseTimeout);
                                 }
@@ -463,7 +510,7 @@ namespace WYW.Communication
                 }
             }
             // 如果接收到符合协议的数据，则认为通讯成功
-            if(items.Count>0)
+            if (items.Count > 0)
             {
                 IsConnected = true;
             }
@@ -501,33 +548,50 @@ namespace WYW.Communication
             {
                 if (Heartbeat.Content == null || !Heartbeat.IsEnabled)
                 {
+                    Thread.Sleep(2000);
                     continue;
                 }
                 if (!Client.IsEstablished)
                 {
+                    Thread.Sleep(2000);
                     continue;
                 }
                 if ((DateTime.Now - LastReceiveTime).TotalSeconds >= Heartbeat.IntervalSeconds)
                 {
-                    var result = SendProtocol(Heartbeat.Content,true, Heartbeat.MaxRetryCount,Heartbeat.Timeout);
+                    var result = SendProtocol(Heartbeat.Content, true, Heartbeat.MaxRetryCount, Heartbeat.Timeout);
+                    InvokeHeartbeatTriggered(result);
                     IsConnected = result.IsSuccess;
-                    if(Heartbeat.HeartbeatTriggerCondition== HeartbeatTriggerCondition.Always)
-                    {
-                        OnHeartbeatTriggered(result);
-                    }
-                    else
-                    {
-                        if(IsConnected)
-                        {
-                            OnHeartbeatTriggered(result);
-                        }
-                    }
-                  
                 }
                 Thread.Sleep(2000);
             }
         }
+
+        private void InvokeHeartbeatTriggered(ExecutionResult result)
+        {
+            switch (Heartbeat.HeartbeatTriggerCondition)
+            {
+                case HeartbeatTriggerCondition.Always:
+                    Task.Run(() =>
+                    {
+                        HeartbeatTriggeredEvent?.Invoke(this, result);
+                        OnHeartbeatTriggered(result);
+                    });
+                    break;
+                case HeartbeatTriggerCondition.Changed:
+                    if (IsConnected != result.IsSuccess)
+                    {
+                        Task.Run(() =>
+                        {
+                            HeartbeatTriggeredEvent?.Invoke(this, result);
+                            OnHeartbeatTriggered(result);
+                        });
+                    }
+                    break;
+            }
+        }
         #endregion
+
+
 
         #endregion
 

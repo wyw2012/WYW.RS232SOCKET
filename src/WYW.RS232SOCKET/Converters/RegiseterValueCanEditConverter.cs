@@ -10,16 +10,14 @@ namespace WYW.RS232SOCKET.Converters
     /// <summary>
     ///
     /// </summary>
-    public class RegiseterValueCanEditConverter : IMultiValueConverter
+    public class RegiseterValueCanEditConverter : IValueConverter
     {
-
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             try
             {
-                StationType stationType = (StationType)Enum.Parse(typeof(StationType), values[0].ToString());
-                RegisterWriteType writeType = (RegisterWriteType)Enum.Parse(typeof(RegisterWriteType), values[1].ToString());
-                if (stationType == StationType.主站 && writeType == RegisterWriteType.只读)
+                RegisterWriteType writeType = (RegisterWriteType)Enum.Parse(typeof(RegisterWriteType), value.ToString());
+                if (writeType == RegisterWriteType.只读)
                 {
                     return false;
                 }
@@ -31,7 +29,7 @@ namespace WYW.RS232SOCKET.Converters
             return true;
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

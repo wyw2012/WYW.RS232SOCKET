@@ -24,7 +24,12 @@ namespace WYW.Communication.Models
             Address = address;
             Value = value.ToString();
         }
-
+        public Register(int address, int value, RegisterType registerType)
+        {
+            Address = address;
+            Value = value.ToString();
+            RegisterType = registerType;
+        }
         #endregion
 
         #region 属性
@@ -38,6 +43,7 @@ namespace WYW.Communication.Models
         private string description;
         private string unit;
         private int registerCount = 1;
+        private OperationType operationType= OperationType.Read;
         /// <summary>
         /// 地址
         /// </summary>
@@ -101,7 +107,7 @@ namespace WYW.Communication.Models
         }
 
         /// <summary>
-        /// 端类型
+        /// 端类型，默认大端对齐
         /// </summary>
         public RegisterEndianType EndianType
         {
@@ -110,12 +116,24 @@ namespace WYW.Communication.Models
         }
 
         /// <summary>
-        /// 读写类型
+        /// 支持读写类型
         /// </summary>
         public RegisterWriteType WriteType
         {
             get => writeType;
-            set => SetProperty(ref writeType, value);
+            set
+            {
+                SetProperty(ref writeType, value);
+                switch (writeType)
+                {
+                    case RegisterWriteType.只读:
+                        OperationType = OperationType.Read;
+                        break;
+                    case RegisterWriteType.只写:
+                        OperationType = OperationType.Write;
+                        break;
+                }
+            }
         }
 
 
@@ -131,6 +149,7 @@ namespace WYW.Communication.Models
                 switch (value)
                 {
                     case RegisterType.保持寄存器:
+                        WriteType = RegisterWriteType.读写;
                         break;
                     case RegisterType.输入寄存器:
                         WriteType = RegisterWriteType.只读;
@@ -139,12 +158,13 @@ namespace WYW.Communication.Models
                         WriteType = RegisterWriteType.只读;
                         break;
                     case RegisterType.线圈:
+                        WriteType = RegisterWriteType.读写;
                         ValueType = RegisterValueType.UInt16;
                         break;
                 }
             }
         }
-
+ 
         /// <summary>
         /// 描述
         /// </summary>
@@ -162,6 +182,12 @@ namespace WYW.Communication.Models
             get => registerCount;
             set => SetProperty(ref registerCount, value);
         }
+
+        /// <summary>
+        /// 操作类型，受限于寄存器的读写类型
+        /// </summary>
+        public OperationType OperationType { get => operationType; set => SetProperty(ref operationType, value); }
+
 
         #endregion
 
@@ -311,8 +337,13 @@ namespace WYW.Communication.Models
                             throw new Exception($"地址为{register.Address}的值错误，该值必须是“0、1、ON、OFF、True、False、T、F”中的一种，不区分大小写。");
                     }
                 }
+         
                 if(register.ValueType!= RegisterValueType.UTF8)
                 {
+                    //if (register.OperationType == OperationType.Write)
+                    //{
+
+                    //}
                     if (!double.TryParse(register.Value, out _))
                     {
                         throw new Exception($"地址为{register.Address}的值错误，该值不符合数值类型");

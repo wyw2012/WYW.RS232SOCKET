@@ -9,11 +9,12 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              x:Name="userControl">
-    <Grid Margin="20" DataContext="{Binding ModbusViewModel}">
+    <Grid Margin="20,20,20,0" DataContext="{Binding ModbusViewModel}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="20"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -24,7 +25,8 @@
 
             <Expander Grid.Column="0" Header="寄存器配置"  IsExpanded="{Binding IsExpanded}">
                 <StackPanel>
-                    <TextBox Text="{Binding RegisterStartAddress}"  wyw:TextBoxElement.Title="起始地址" />
+                    <TextBox Text="{Binding RegisterStartAddress}"  wyw:TextBoxElement.Title="起始地址" 
+                             wyw:TextBoxElement.PopupHint="默认值10进制，16进制以0x开头"/>
                     <TextBox Text="{Binding RegisterCount}" wyw:TextBoxElement.Title="寄存器数量" />
 
                     <Grid Height="60" Margin="0,10,0,0">
@@ -43,17 +45,17 @@
             </Expander>
 
             <Expander Grid.Column="2"  Header="寄存器操作" IsExpanded="{Binding IsExpanded}"
-                          Visibility="{Binding Path=Controller.Modbus.StationType, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}" >
+                          Visibility="{Binding Path=Controller.Config.Modbus.StationType, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}" >
                 <StackPanel>
                     <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
-                                  IsChecked="{Binding Controller.Modbus.IsSupportMultiWriteCommand}"
+                                  IsChecked="{Binding Controller.Config.Modbus.IsSupportMultiWriteCommand}"
                                   wyw:ToggleButtonElement.Title="支持多指令（0x10、0x0F）"/>
                     <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
-                                  IsChecked="{Binding Controller.Send.IsCyclic}"
+                                  IsChecked="{Binding Controller.Config.Send.IsCyclic}"
                                   wyw:ToggleButtonElement.Title="定时读写"/>
-                    <TextBox Text="{Binding Controller.Send.CyclicInterval}" wyw:TextBoxElement.Title="循环周期（ms）"
-                             Visibility="{Binding Controller.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
-                    <TextBox Text="{Binding Controller.Send.ResponseTimeout}" wyw:TextBoxElement.Title="应答超时（ms）"/>
+                    <TextBox Text="{Binding Controller.Config.Send.CyclicInterval}" wyw:TextBoxElement.Title="循环周期（ms）"
+                             Visibility="{Binding Controller.Config.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+                    <TextBox Text="{Binding Controller.Config.Send.ResponseTimeout}" wyw:TextBoxElement.Title="应答超时（ms）"/>
 
                     <Grid Height="60" Margin="0,10,0,0"  IsEnabled="{Binding Controller.Device.IsConnected,FallbackValue=false}">
                         <Grid.ColumnDefinitions>
@@ -69,11 +71,11 @@
 
             <Grid Grid.ColumnSpan="3" 
                   Visibility="{Binding IsRunning,Converter={StaticResource ConstToVisibilityConverter}}">
-               
+
                 <Button Content="停        止"  
                         wyw:ButtonElement.IcoGeometry="{StaticResource StopGeometry}"
                         Command="{Binding StopReadWriteCommand}"
-                        Visibility="{Binding Controller.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
+                        Visibility="{Binding Controller.Config.Send.IsCyclic,Converter={StaticResource ConstToVisibilityConverter}}"/>
             </Grid>
         </Grid>
         <Grid Grid.Row="2">
@@ -84,7 +86,7 @@
                                         ElementStyle="{StaticResource DataGridCheckBoxEditStyle}"
                                         EditingElementStyle="{StaticResource DataGridCheckBoxEditStyle}" 
                                         CanUserSort="False"
-                                        Visibility="{Binding Path=DataContext.Controller.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+                                        Visibility="{Binding Path=DataContext.Controller.Config.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
                         <DataGridCheckBoxColumn.Header>
                             <CheckBox Margin="-5,0"  HorizontalAlignment="Left"   IsChecked="{Binding Path=DataContext.IsSelectAll,Source={x:Reference ProxyGrid}}"/>
                         </DataGridCheckBoxColumn.Header>
@@ -111,7 +113,7 @@
                                         ItemsSource="{Binding Source={StaticResource RegisterWriteTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding WriteType,UpdateSourceTrigger=PropertyChanged}" 
-                                        Visibility="{Binding Path=DataContext.Controller.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
+                                        Visibility="{Binding Path=DataContext.Controller.Config.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
                         <DataGridComboBoxColumn.CellStyle>
                             <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
                                 <Setter Property="IsEnabled" >
@@ -152,15 +154,14 @@
                                         ItemsSource="{Binding Source={StaticResource EndianTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding EndianType,UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value,UpdateSourceTrigger=PropertyChanged}">
+                    <!--主站值-->
+                    <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value,UpdateSourceTrigger=PropertyChanged}"
+                                        Visibility="{Binding Path=DataContext.Controller.Config.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=主站}">
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
                                 <Setter Property="IsEnabled" >
                                     <Setter.Value>
-                                        <MultiBinding Converter="{StaticResource RegiseterValueCanEditConverter}">
-                                            <Binding Path="DataContext.Controller.Modbus.StationType" Source="{x:Reference ProxyGrid}"/>
-                                            <Binding Path="WriteType" />
-                                        </MultiBinding>
+                                        <Binding Path="WriteType" Converter="{StaticResource RegiseterValueCanEditConverter}"/>
                                     </Setter.Value>
                                 </Setter>
                                 <Setter Property="ToolTip">
@@ -171,6 +172,11 @@
                             </Style>
                         </DataGridTextColumn.CellStyle>
                     </DataGridTextColumn>
+                    <!--从站值-->
+                    <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value,UpdateSourceTrigger=PropertyChanged}"
+                                        Visibility="{Binding Path=DataContext.Controller.Config.Modbus.StationType,Source={x:Reference ProxyGrid}, Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=从站}"/>
+
+
                     <DataGridTextColumn Width="*" Header="单位" Binding="{Binding Unit,UpdateSourceTrigger=PropertyChanged}"/>
                     <DataGridTextColumn Width="6*" Header="描述" Binding="{Binding Description}"/>
                 </DataGrid.Columns>
@@ -181,6 +187,15 @@
                     </ContextMenu>
                 </DataGrid.ContextMenu>
             </DataGrid>
+        </Grid>
+
+        <Grid Grid.Row="3"  Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Text="{Binding Controller.Config.Display.LastSend}" Style="{StaticResource ComboBoxEditableTextBox}" IsReadOnly="True"/>
+            <TextBox Grid.Row="1" Text="{Binding Controller.Config.Display.LastReceive}" Style="{StaticResource ComboBoxEditableTextBox}" IsReadOnly="True"/>
         </Grid>
     </Grid>
 

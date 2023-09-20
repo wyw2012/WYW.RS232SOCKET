@@ -10,7 +10,7 @@ namespace WYW.Communication
     /// <summary>
     /// 协议类型
     /// </summary>
-   public enum ProtocolType
+    public enum ProtocolType
     {
         /// <summary>
         /// Hex
@@ -65,7 +65,7 @@ namespace WYW.Communication
         /// <summary>
         /// 读多个离散量输入寄存器
         /// </summary>
-        ReadMoreDiscreteInputRegisters=0x02,
+        ReadMoreDiscreteInputRegisters = 0x02,
         /// <summary>
         /// 读多个保持寄存器
         /// </summary>
@@ -185,12 +185,12 @@ namespace WYW.Communication
     public enum HeartbeatTriggerCondition
     {
         /// <summary>
-        /// 始终触发
+        /// 当连接状态改变时
         /// </summary>
-        Always=0,
+        Changed = 0,
         /// <summary>
-        /// 当建立连接时触发
+        /// 始终触发，无论心跳是否建立
         /// </summary>
-        Connected=1,
+        Always = 1,
     }
 }

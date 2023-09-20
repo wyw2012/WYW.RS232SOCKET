@@ -22,16 +22,18 @@ namespace WYW.RS232SOCKET.Views
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel viewModel=new MainWindowViewModel();
         public MainWindow()
         {
             InitializeComponent();
-            Title = "RS232 & Socket & Modbus调试助手 V1.5";
-            this.DataContext = new MainWindowViewModel();
+            Title = "RS232 & Socket & Modbus & VISA调试助手 V2.0";
+            this.DataContext = viewModel;
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
+            viewModel.Controller?.Close();
             Environment.Exit(Environment.ExitCode);
         }
         private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)

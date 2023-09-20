@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,7 +31,7 @@ namespace WYW.Communication
         /// <param name="text">十六进制字符串</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static byte[] ToHexArray(string text)
+        public static byte[] ToHexArray(this string text)
         {
             var result = new List<byte>();
             var chars = Regex.Replace(text, @"\s", ""); // 剔除空格
@@ -47,6 +49,15 @@ namespace WYW.Communication
                 throw new ArgumentException($"字符串无法转换成十六进制");
             }
             return result.ToArray();
+        }
+        /// <summary>
+        /// 将字节数组转换成UTF-8格式的字符串
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToASCII(this byte[] source)
+        {
+            return Encoding.ASCII.GetString(source);
         }
         /// <summary>
         /// 将字节数组转换成UTF-8格式的字符串
@@ -150,6 +161,53 @@ namespace WYW.Communication
         public static string ToFileName(this string chars)
         {
             return Regex.Replace(chars, @"[\/\\\|\<\>\*\:\?]", " ");
+        }
+        /// <summary>
+        /// 判断字符串是否是IP地址
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <returns></returns>
+        public static bool IsIPV4(this string ipAddress)
+        {
+           return Regex.IsMatch(ipAddress, @"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+        }
+        /// <summary>
+        /// 每两个字符之间加入空格
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string AddSpace(this string text)
+        {
+            return string.Join(" ", Regex.Split(text, @"(?<=\G.{2})(?!$)"));
+        }
+
+        public static T DeepClone<T>(this T input)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, input);
+                ms.Position = 0;
+                return (T)formatter.Deserialize(ms);
+            }
+        }
+        public static IEnumerable<T> DataTableToList<T>(this DataTable dataTable)
+        {
+            List<T> list = new List<T>();
+            foreach (DataRow row in dataTable.Rows)
+            {
+                T item = Activator.CreateInstance<T>();
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    PropertyInfo property = item.GetType().GetProperty(column.ColumnName);
+                    if (property != null)
+                    {
+                        property.SetValue(item, row[column], null);
+                    }
+                }
+                list.Add(item);
+            }
+            return list;
         }
 
     }

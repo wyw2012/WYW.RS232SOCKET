@@ -15,7 +15,6 @@ using WYW.RS232SOCKET.Models;
 using WYW.UI.Controls;
 using MessageBox = WYW.UI.Controls.MessageBoxWindow;
 using MessageControl = WYW.UI.Controls.MessageBoxControl;
-using WYW.Communication;
 
 namespace WYW.RS232SOCKET.ViewModels
 {
@@ -23,12 +22,12 @@ namespace WYW.RS232SOCKET.ViewModels
     {
         private CancellationTokenSource token = null;
 
-        public CommonViewModel(DeviceController controller)
+        public CommonViewModel()
         {
-            Controller = controller;
+
         }
         #region 属性
-        public DeviceController Controller { get; }
+        public DeviceController Controller { get; } = Ioc.Controller;
         private bool isExpanded = true;
 
         /// <summary>
@@ -55,7 +54,6 @@ namespace WYW.RS232SOCKET.ViewModels
         public RelayCommand OpenFileCommand { get; private set; }
         public RelayCommand<object> CopyTextCommand { get; private set; }
         public RelayCommand OpenResponseFileCommand { get; private set; }
-
         public RelayCommand DownloadTemplateCommand { get; private set; }
         private void Send()
         {
@@ -67,7 +65,7 @@ namespace WYW.RS232SOCKET.ViewModels
                     var sendQueue = CheckSendText();
                     if (sendQueue.Count > 0)
                     {
-                        Controller.Status.ProgressBarVisibility = Visibility.Visible;
+                        Controller.Config.Status.ProgressBarVisibility = Visibility.Visible;
                     }
                     IsRunning = true;
 
@@ -87,14 +85,14 @@ namespace WYW.RS232SOCKET.ViewModels
                             }
 
                             Controller.Device.SendBytes(sendQueue[i]);
-                            Controller.Status.Progress = ((i + 1) * 100) / sendQueue.Count;
-                            if (i != sendQueue.Count - 1 || Controller.Send.IsCyclic)
+                            Controller.Config.Status.Progress = ((i + 1) * 100) / sendQueue.Count;
+                            if (i != sendQueue.Count - 1 || Controller.Config.Send.IsCyclic)
                             {
-                                Thread.Sleep(Controller.Send.CyclicInterval);
+                                Thread.Sleep(Controller.Config.Send.CyclicInterval);
                             }
 
                         }
-                    } while (Controller.Send.IsCyclic);
+                    } while (Controller.Config.Send.IsCyclic);
                 }
                 catch (Exception ex)
                 {
@@ -103,7 +101,7 @@ namespace WYW.RS232SOCKET.ViewModels
                 finally
                 {
                     IsRunning = false;
-                    Controller.Status.ProgressBarVisibility = Visibility.Collapsed;
+                    Controller.Config.Status.ProgressBarVisibility = Visibility.Collapsed;
                 }
             }).ContinueWith(ProcessWhenTaskCompleted);
 
@@ -123,7 +121,7 @@ namespace WYW.RS232SOCKET.ViewModels
         private void OpenFile()
         {
             // 命令执行在IsChecked之后，所以根据改变后的状态进行判断
-            if (!Controller.Send.IsSendFile)
+            if (!Controller.Config.Send.IsSendFile)
             {
                 return;
             }
@@ -136,15 +134,13 @@ namespace WYW.RS232SOCKET.ViewModels
             };
             if (ofd.ShowDialog() == true)
             {
-                Controller.Send.SendText = ofd.FileName;
+                Controller.Config.Send.SendText = ofd.FileName;
             }
             else
             {
-                Controller.Send.IsSendFile = false;
+                Controller.Config.Send.IsSendFile = false;
             }
         }
-
-
 
         private void DownloadTemplate()
         {
@@ -172,7 +168,7 @@ namespace WYW.RS232SOCKET.ViewModels
         private void OpenResponseFile()
         {
 
-            if (!Controller.Receive.IsAutoResponse)
+            if (!Controller.Config.Receive.IsAutoResponse)
             {
                 return;
             }
@@ -186,19 +182,19 @@ namespace WYW.RS232SOCKET.ViewModels
             {
                 try
                 {
-                    Controller.Receive.Response.Clear();
+                    Controller.Config.Receive.Response.Clear();
                     ValicateResponseFile(ofd.FileName);
                 }
                 catch (Exception ex)
                 {
                     MessageBoxWindow.Error(ex.Message);
-                    Controller.Receive.IsAutoResponse = false;
+                    Controller.Config.Receive.IsAutoResponse = false;
                 }
 
             }
             else
             {
-                Controller.Receive.IsAutoResponse = false;
+                Controller.Config.Receive.IsAutoResponse = false;
             }
         }
         private void CopyText(object content)
@@ -225,19 +221,19 @@ namespace WYW.RS232SOCKET.ViewModels
         {
             List<byte[]> sendQueue = new List<byte[]>();
 
-            if (string.IsNullOrEmpty(Controller.Send.SendText))
+            if (string.IsNullOrEmpty(Controller.Config.Send.SendText))
             {
                 throw new Exception("发送栏无数据。");
             }
             sendQueue.Clear();
             string[] items;
-            if (Controller.Send.IsSendFile)
+            if (Controller.Config.Send.IsSendFile)
             {
-                items = File.ReadAllLines(Controller.Send.SendText);
+                items = File.ReadAllLines(Controller.Config.Send.SendText);
             }
             else
             {
-                items = Controller.Send.SendText.Split(Environment.NewLine.ToCharArray(), options: StringSplitOptions.RemoveEmptyEntries);
+                items = Controller.Config.Send.SendText.Split(Environment.NewLine.ToCharArray(), options: StringSplitOptions.RemoveEmptyEntries);
             }
 
             foreach (var item in items)
@@ -247,40 +243,27 @@ namespace WYW.RS232SOCKET.ViewModels
                     continue;
                 }
                 var temp = new List<byte>();
-                switch (Controller.Send.ProtocolType)
+                switch (Controller.Config.Send.ProtocolType)
                 {
-                    case ProtocolType.Hex:
-                        var chars = Regex.Replace(item, @"\s", ""); // 剔除空格
-                        if (chars.Length % 2 == 1)
-                        {
-                            throw new Exception($"字符串长度需要是偶数");
-                        }
-                        var hexs = Regex.Split(chars, @"(?<=\G.{2})(?!$)");   // 两两分组
-                        try
-                        {
-                            temp.AddRange(hexs.Select(x => Convert.ToByte(x, 16)).ToArray());
-                        }
-                        catch
-                        {
-                            throw new Exception($"字符串无法转换成十六进制，");
-                        }
+                    case TextProtocolType.Hex:
+                        temp.AddRange(item.ToHexArray());
                         break;
-                    case ProtocolType.UTF8:
+                    case TextProtocolType.UTF8:
                         temp.AddRange(Encoding.UTF8.GetBytes(item));
                         break;
-                    case ProtocolType.UTF8_CR:
+                    case TextProtocolType.UTF8_CR:
                         temp.AddRange(Encoding.UTF8.GetBytes(item));
                         temp.AddRange(Encoding.UTF8.GetBytes("\r"));
                         break;
-                    case ProtocolType.UTF8_LF:
+                    case TextProtocolType.UTF8_LF:
                         temp.AddRange(Encoding.UTF8.GetBytes(item));
                         temp.AddRange(Encoding.UTF8.GetBytes("\n"));
                         break;
-                    case ProtocolType.UTF8_CRLF:
+                    case TextProtocolType.UTF8_CRLF:
                         temp.AddRange(Encoding.UTF8.GetBytes(item));
                         temp.AddRange(Encoding.UTF8.GetBytes("\r\n"));
                         break;
-                    case ProtocolType.UTF8_CheckSum:
+                    case TextProtocolType.UTF8_CheckSum:
                         temp.AddRange(Encoding.UTF8.GetBytes(item));
                         temp.Add((byte)temp.Sum(x => x));
                         break;
@@ -302,7 +285,7 @@ namespace WYW.RS232SOCKET.ViewModels
             var ef = ExcelFile.Load(fileName);
             var ws = ef.Worksheets[0];
 
-            Controller.Receive.ProtocolType = (ProtocolType)Enum.Parse(typeof(ProtocolType), ws.Cells[1, 1].Value.ToString());
+            Controller.Config.Receive.ProtocolType = (TextProtocolType)Enum.Parse(typeof(TextProtocolType), ws.Cells[1, 1].Value.ToString());
 
             if (ws.Rows.Count < 4)
             {
@@ -325,65 +308,52 @@ namespace WYW.RS232SOCKET.ViewModels
 
                 var keyArray = new List<byte>();
                 var valueArray = new List<byte>();
-                switch (Controller.Receive.ProtocolType)
+                switch (Controller.Config.Receive.ProtocolType)
                 {
-                    case ProtocolType.Hex:
-                        var chars = Regex.Replace(key, @"\s", ""); // 剔除空格
-                        if (chars.Length % 2 == 1)
-                        {
-                            throw new Exception($"第{i + 1}行接收字符串长度需要是偶数");
-                        }
-                        var hexs = Regex.Split(chars, @"(?<=\G.{2})(?!$)");   // 两两分组
+                    case TextProtocolType.Hex:
                         try
                         {
-                            keyArray.AddRange(hexs.Select(x => Convert.ToByte(x, 16)).ToArray());
+                            keyArray.AddRange(key.ToHexArray());
                         }
-                        catch
+                        catch(Exception ex)
                         {
-                            throw new Exception($"第{i + 1}行接收字符串无法转换成十六进制，");
+                            throw new Exception($"第{i + 1}行错误，{ex.Message}");
                         }
-
-                        chars = Regex.Replace(value, @"\s", ""); // 剔除空格
-                        if (chars.Length % 2 == 1)
-                        {
-                            throw new Exception($"第{i + 1}行应答字符串长度需要是偶数");
-                        }
-                        hexs = Regex.Split(chars, @"(?<=\G.{2})(?!$)");   // 两两分组
                         try
                         {
-                            valueArray.AddRange(hexs.Select(x => Convert.ToByte(x, 16)).ToArray());
+                            valueArray.AddRange(value.ToHexArray());
                         }
-                        catch
+                        catch(Exception ex)
                         {
-                            throw new Exception($"第{i + 1}行应答字符串无法转换成十六进制，");
+                            throw new Exception($"第{i + 1}行错误，{ex.Message}");
                         }
                         break;
-                    case ProtocolType.UTF8:
+                    case TextProtocolType.UTF8:
                         keyArray.AddRange(Encoding.UTF8.GetBytes(key));
                         valueArray.AddRange(Encoding.UTF8.GetBytes(value));
                         break;
-                    case ProtocolType.UTF8_CR:
+                    case TextProtocolType.UTF8_CR:
                         keyArray.AddRange(Encoding.UTF8.GetBytes(key));
                         keyArray.AddRange(Encoding.UTF8.GetBytes("\r"));
 
                         valueArray.AddRange(Encoding.UTF8.GetBytes(value));
                         valueArray.AddRange(Encoding.UTF8.GetBytes("\r"));
                         break;
-                    case ProtocolType.UTF8_LF:
+                    case TextProtocolType.UTF8_LF:
                         keyArray.AddRange(Encoding.UTF8.GetBytes(key));
                         keyArray.AddRange(Encoding.UTF8.GetBytes("\n"));
 
                         valueArray.AddRange(Encoding.UTF8.GetBytes(value));
                         valueArray.AddRange(Encoding.UTF8.GetBytes("\n"));
                         break;
-                    case ProtocolType.UTF8_CRLF:
+                    case TextProtocolType.UTF8_CRLF:
                         keyArray.AddRange(Encoding.UTF8.GetBytes(key));
                         keyArray.AddRange(Encoding.UTF8.GetBytes("\r\n"));
 
                         valueArray.AddRange(Encoding.UTF8.GetBytes(value));
                         valueArray.AddRange(Encoding.UTF8.GetBytes("\r\n"));
                         break;
-                    case ProtocolType.UTF8_CheckSum:
+                    case TextProtocolType.UTF8_CheckSum:
                         keyArray.AddRange(Encoding.UTF8.GetBytes(key));
                         keyArray.Add((byte)keyArray.Sum(x => x));
 
@@ -393,10 +363,10 @@ namespace WYW.RS232SOCKET.ViewModels
                 }
 
 
-                if (!Controller.Receive.Response.ContainsKey(keyArray.ToHexString()))
+                if (!Controller.Config.Receive.Response.ContainsKey(keyArray.ToHexString()))
                 {
 
-                    Controller.Receive.Response.Add(keyArray.ToHexString(), valueArray.ToArray());
+                    Controller.Config.Receive.Response.Add(keyArray.ToHexString(), valueArray.ToArray());
                 }
 
             }

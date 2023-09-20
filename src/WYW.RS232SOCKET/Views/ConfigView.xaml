@@ -36,7 +36,7 @@
                         <!--串口配置-->
                         <GroupBox Header="通信配置" Margin="0,0,0,20"  
                               Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=RS232}">
-                            <StackPanel DataContext="{Binding RS232}">
+                            <StackPanel DataContext="{Binding Config.RS232}">
                                 <ComboBox wyw:ComboBoxElement.Title="串口"  SelectedItem="{Binding PortName}" 
                                               ItemsSource="{Binding DataContext.PortNames,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
                                 <ComboBox wyw:ComboBoxElement.Title="波特率" SelectedItem="{Binding BaudRate}"
@@ -69,7 +69,7 @@
                         <!--TCP Client-->
                         <GroupBox Header="通信配置" Margin="0,0,0,20"   
                               Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=TCPClient}">
-                            <StackPanel DataContext="{Binding TCPClient}">
+                            <StackPanel DataContext="{Binding Config.TCPClient}">
                                 <TextBox wyw:TextBoxElement.Title="远程地址：" Text="{Binding RemoteIP}" />
                                 <TextBox wyw:TextBoxElement.Title="端口号：" Text="{Binding RemotePort}"/>
                                 <TextBox wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
@@ -79,7 +79,7 @@
                         <!--TCP Server-->
                         <GroupBox Header="通信配置" Margin="0,0,0,20"   
                               Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=TCPServer}">
-                            <StackPanel DataContext="{Binding TCPServer}">
+                            <StackPanel DataContext="{Binding Config.TCPServer}">
                                 <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}" 
                                       ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
                                 <TextBox wyw:TextBoxElement.Title="端口号：" Text="{Binding LocalPort}"/>
@@ -90,7 +90,7 @@
                         <!--UDP Client-->
                         <GroupBox Header="通信配置" Margin="0,0,0,20"  
                               Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=UDPClient}">
-                            <StackPanel DataContext="{Binding UDPClient}">
+                            <StackPanel DataContext="{Binding Config.UDPClient}">
                                 <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}"  
                                       ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
                                 <TextBox  wyw:TextBoxElement.Title="本地端口号：" Text="{Binding LocalPort}"/>
@@ -103,7 +103,7 @@
                         <!--UDP Server-->
                         <GroupBox Header="通信配置" Margin="0,0,0,20"   
                               Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=UDPServer}">
-                            <StackPanel DataContext="{Binding UDPServer}">
+                            <StackPanel DataContext="{Binding Config.UDPServer}">
                                 <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}"  
                                       ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
                                 <TextBox wyw:TextBoxElement.Title="本地端口号：" Text="{Binding LocalPort}"/>
@@ -115,17 +115,27 @@
                         <GroupBox Header="Modbus配置" Margin="0,0,0,20" 
                           Visibility="{Binding ProtocolType,Converter={StaticResource ConstCollectionToVisibilityConverter},ConverterParameter='1 2'}">
                             <StackPanel >
-                                <ComboBox wyw:ComboBoxElement.Title="站点类型" SelectedItem="{Binding Modbus.StationType}" 
+                                <ComboBox wyw:ComboBoxElement.Title="站点类型" SelectedItem="{Binding Config.Modbus.StationType}" 
                                       ItemsSource="{Binding Source={StaticResource ModbusTypeCollection} }" />
-                                <TextBox wyw:TextBoxElement.Title="从站地址（1-255）"  Text="{Binding Modbus.SlaveID}" 
+                                <TextBox wyw:TextBoxElement.Title="从站地址（1-255）"  Text="{Binding Config.Modbus.SlaveID}" 
                                       Visibility="{Binding ProtocolType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=1}"/>
-                                <TextBox wyw:TextBoxElement.Title="事务标识（0-65535）"  Text="{Binding Modbus.TransactionID}"
+                                <TextBox wyw:TextBoxElement.Title="事务标识（0-65535）"  Text="{Binding Config.Modbus.TransactionID}"
                                      Visibility="{Binding ProtocolType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=2}"/>
 
                             </StackPanel>
                         </GroupBox>
+                        <!--VISA-->
+                        <GroupBox Header="VISA配置" Margin="0,0,0,20" 
+                             Visibility="{Binding CommunicationType,Converter={StaticResource ConstToVisibilityConverter},ConverterParameter=VISA}">
+                            <StackPanel >
+                                <ComboBox wyw:ComboBoxElement.Title="资源名称"  SelectedItem="{Binding Config.VISA.ResourceName}" 
+                                                  ItemsSource="{Binding VISAResourceNames}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收终止符（0-255）" Text="{Binding Config.VISA.TerminationCharacter}"
+                                          ToolTip="{Binding Config.VISA.TerminationCharacter,Converter={StaticResource ToHexConverter}}"/>
+                            </StackPanel>
+                        </GroupBox>
                     </StackPanel>
-               
+                 
                     <!--Fuction Button-->
                     <Grid Height="60">
                         <Grid.ColumnDefinitions>

@@ -15,6 +15,7 @@ namespace WYW.Communication
     {
         public ModbusMaster(TransferBase client, ModbusProtocolType protocolType = ModbusProtocolType.Auto) : base(client)
         {
+        
             switch (protocolType)
             {
                 case ModbusProtocolType.ModbusRTU:
@@ -498,7 +499,7 @@ namespace WYW.Communication
         {
             if (value.Length % 2 == 1)
             {
-                return ExecutionResult.Failed("输入字节数组长度不能为奇数");
+                return ExecutionResult.Failed(Properties.Message.ArrayLengthNotOdd);
             }
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
@@ -620,6 +621,15 @@ namespace WYW.Communication
         #endregion
 
         #region 寄存器数组操作
+        /// <summary>
+        /// 读取多个寄存器几个
+        /// </summary>
+        /// <param name="slaveID"></param>
+        /// <param name="registers"></param>
+        /// <param name="responseTimeout"></param>
+        /// <param name="tokenSource"></param>
+        /// <param name="isIgnoreFailed"></param>
+        /// <exception cref="Exception"></exception>
         public void ReadRegisterCollection(int slaveID, IEnumerable<Register> registers, int responseTimeout = 300, CancellationTokenSource tokenSource = null, bool isIgnoreFailed = false)
         {
             if (!registers.Any(x => x.IsChecked == true))
@@ -980,6 +990,58 @@ namespace WYW.Communication
 
         }
 
+        public ExecutionResult ReadWriteRegister(int slaveID, Register register, int responseTimeout = 300)
+        {
+            UInt16[] uintValues;
+            bool[] boolValues;
+            ExecutionResult result = ExecutionResult.Failed();
+            switch (register.RegisterType)
+            {
+                case RegisterType.保持寄存器:
+                    if (register.OperationType == OperationType.Read)
+                    {
+                        result = ReadHoldingRegisters(slaveID, (UInt16)register.Address, 1, out uintValues, responseTimeout: responseTimeout);
+                        if (result.IsSuccess)
+                        {
+                            register.Value = uintValues[0].ToString();
+                        }
+                    }
+                    else
+                    {
+                        result = WriteHoldingRegisters(slaveID, (UInt16)register.Address, register.GetBytes(), responseTimeout: responseTimeout);
+                    }
+                    break;
+                case RegisterType.输入寄存器:
+                    result = ReadInputRegisters(slaveID, (UInt16)register.Address, 1, out uintValues, responseTimeout: responseTimeout);
+                    if (result.IsSuccess)
+                    {
+                        register.Value = uintValues[0].ToString();
+                    }
+                    break;
+                case RegisterType.线圈:
+                    if (register.OperationType == OperationType.Read)
+                    {
+                        result = ReadCoils(slaveID, (UInt16)register.Address, 1, out boolValues, responseTimeout: responseTimeout);
+                        if (result.IsSuccess)
+                        {
+                            register.Value = boolValues[0] ? "1" : "0";
+                        }
+                    }
+                    else
+                    {
+                        result = WriteCoil(slaveID, (UInt16)register.Address, register.Value == "1", responseTimeout: responseTimeout);
+                    }
+                    break;
+                case RegisterType.离散量输入:
+                    result = ReadDiscreteInputRegisters(slaveID, (UInt16)register.Address, 1, out boolValues, responseTimeout: responseTimeout);
+                    if (result.IsSuccess)
+                    {
+                        register.Value = boolValues[0] ? "1" : "0";
+                    }
+                    break;
+            }
+            return result;
+        }
         #endregion
 
         #region 私有函数
@@ -987,7 +1049,7 @@ namespace WYW.Communication
         {
             if (!IsConnected)
             {
-                return ExecutionResult.Failed("通讯未连接");
+                return ExecutionResult.Failed(Properties.Message.CommunicationUnconnected);
             }
             ProtocolBase obj = null;
             if (ProtocolType == ProtocolType.ModbusRTU)

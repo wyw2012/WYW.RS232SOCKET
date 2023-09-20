@@ -10,17 +10,17 @@ namespace WYW.Communication.TransferLayer
     public class TCPServer : TransferBase
     {
         private Socket lastActiveClientSocket; // 最近一次活动的客户端
-        private List<Socket> clientSockets; // 客户端队列
+        private List<Socket> clientSockets=new List<Socket>(); // 客户端队列
         private readonly IPEndPoint ipep;
         private Socket serverSocket;
         private readonly byte[] inBuffer;
         private readonly int maxClientCount; // 最大客户端数量
 
-        public TCPServer(string ip, int port, int receiveBufferSize = 4096,int maxConnectCount=100)
+        public TCPServer(string ip, int port, int receiveBufferSize = 4096,int maxClientCount = 100)
         {
             inBuffer = new byte[receiveBufferSize];
             ipep = new IPEndPoint(IPAddress.Parse(ip), port);
-            maxClientCount = maxConnectCount;
+            this.maxClientCount = maxClientCount;
             serverSocket = new Socket(ipep.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
         }
 
@@ -49,10 +49,10 @@ namespace WYW.Communication.TransferLayer
                         {
                             Socket client = serverSocket.Accept();
                             OnStatusChanged($"Socket建立连接。远程节点：{client.RemoteEndPoint}");
+                            // 客户端超过最大数量，则移除最先建立连接的。最合理的方案是移除长时间未通讯的，目前的方案是简单粗暴
                             if(clientSockets.Count>maxClientCount)
                             {
                                 Dispose(clientSockets[0]);
-                                clientSockets.RemoveAt(0);
                             }
                           
                             clientSockets.Add(client);
@@ -79,6 +79,7 @@ namespace WYW.Communication.TransferLayer
         {
             if (!IsOpen)
                 return;
+            OnStatusChanged("Socket Server已主动关闭。");
             foreach (var client in clientSockets)
             {
                 client.Close();
@@ -90,7 +91,7 @@ namespace WYW.Communication.TransferLayer
                 serverSocket.Dispose();
             }
             IsEstablished = IsOpen = false;
-            OnStatusChanged("Socket Server已主动关闭。");
+      
         }
 
         public override void Write(byte[] content)
@@ -145,6 +146,7 @@ namespace WYW.Communication.TransferLayer
         {
             if (socket != null)
             {
+                clientSockets.Remove(socket);
                 socket.Close();
                 socket.Dispose();
                 socket = null;
