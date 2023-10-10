@@ -49,7 +49,7 @@
                 <StackPanel>
                     <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
                                   IsChecked="{Binding Controller.Config.Modbus.IsSupportMultiWriteCommand}"
-                                  wyw:ToggleButtonElement.Title="支持多指令（0x10、0x0F）"/>
+                                  wyw:ToggleButtonElement.Title="写支持多指令（0x10、0x0F）"/>
                     <ToggleButton Style="{StaticResource SwitchButtonStyle}" 
                                   IsChecked="{Binding Controller.Config.Send.IsCyclic}"
                                   wyw:ToggleButtonElement.Title="定时读写"/>

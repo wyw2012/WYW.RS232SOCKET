@@ -104,7 +104,7 @@ namespace WYW.Communication
         /// <summary>
         /// 警告，一般是发送超时，或者接收的数据不满足要求，自恢复
         /// </summary>
-        Warning = 4,
+        //Warning = 4,
         /// <summary>
         /// 错误，一般是设备故障，必须复位才能消除
         /// </summary>

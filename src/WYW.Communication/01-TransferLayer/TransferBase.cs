@@ -102,60 +102,48 @@ namespace WYW.Communication.TransferLayer
         /// <exception cref="System.Exception"></exception>
         public virtual void ClearBuffer()
         {
-           
+
         }
         #endregion
 
         #region 内部方法
         protected void OnStatusChanged(string message)
         {
-            Task.Run(() =>
-            {
-                StatusChangedEventArgs e = new StatusChangedEventArgs(message);
-                StatusChangedEvent?.Invoke(this, e);
+            StatusChangedEventArgs e = new StatusChangedEventArgs(message);
+            StatusChangedEvent?.Invoke(this, e);
 
 #if DEBUG
-                Trace.WriteLine(e.ToString());
+            Trace.WriteLine(e.ToString());
 #endif
-                if (LogEnabled)
-                {
-                    Logger.WriteLine(LogFolder, e.ToString());
-                }
-            });
+            if (LogEnabled)
+            {
+                Logger.WriteLine(LogFolder, e.ToString());
+            }
         }
         protected void OnDataReceived(byte[] buffer)
         {
-            Task.Run(() =>
-            {
-                DataReceivedEventArgs e = new DataReceivedEventArgs(buffer);
+            DataReceivedEventArgs e = new DataReceivedEventArgs(buffer);
 #if DEBUG
-                Trace.WriteLine(e.ToString());
+            Trace.WriteLine(e.ToString());
 #endif
-                DataReceivedEvent?.Invoke(this, e);
-                if (LogEnabled)
-                {
-                    Logger.WriteLine(LogFolder, e.ToString());
-                }
-            });
-
-
+            DataReceivedEvent?.Invoke(this, e);
+            if (LogEnabled)
+            {
+                Logger.WriteLine(LogFolder, e.ToString());
+            }
         }
         protected void OnDataTransmited(byte[] buffer)
         {
-            Task.Run(() =>
-            {
-                DataTransmitedEventArgs e = new DataTransmitedEventArgs(buffer);
+            DataTransmitedEventArgs e = new DataTransmitedEventArgs(buffer);
 
 #if DEBUG
-                Trace.WriteLine(e.ToString());
+            Trace.WriteLine(e.ToString());
 #endif
-                DataTransmitedEvent?.Invoke(this, e);
-                if (LogEnabled)
-                {
-                    Logger.WriteLine(LogFolder, e.ToString());
-                }
-            });
-
+            DataTransmitedEvent?.Invoke(this, e);
+            if (LogEnabled)
+            {
+                Logger.WriteLine(LogFolder, e.ToString());
+            }
         }
         #endregion
 

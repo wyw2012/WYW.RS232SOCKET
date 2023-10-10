@@ -118,6 +118,7 @@ namespace WYW.Communication.TransferLayer
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex.ToString());
             }
             return new byte[0];
         }

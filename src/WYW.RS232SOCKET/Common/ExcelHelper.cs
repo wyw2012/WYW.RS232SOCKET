@@ -55,9 +55,9 @@ namespace WYW.RS232SOCKET.Common
             int index = 0;
             foreach (var item in ef.Worksheets)
             {
-                if (item.Rows[0].AllocatedCells.Count== sourceSheet.Rows[0].AllocatedCells.Count)
+                if (item.Rows[0].AllocatedCells.Count>= sourceSheet.Rows[0].AllocatedCells.Count)
                 {
-                    int count = item.Rows[0].AllocatedCells.Count;
+                    int count = sourceSheet.Rows[0].AllocatedCells.Count;
                     for (int i = 0; i < count; i++)
                     {
                        if(item.Cells[0, i].Value?.ToString()!= sourceSheet.Cells[0, i].Value?.ToString())

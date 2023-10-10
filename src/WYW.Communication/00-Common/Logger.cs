@@ -24,6 +24,34 @@ namespace WYW.Communication
             var writer = LogWritter.CreateInstance(folderPath);
             writer.WriteLine(content, withTimeStamp);
         }
+        /// <summary>
+        /// 清理指定天数之前的日志文件
+        /// </summary>
+        /// <param name="logFolder"></param>
+        /// <param name="keepDay"></param>
+        public static void DeleteLogFiles(string logFolder, int keepDay)
+        {
+            Task.Run(() =>
+            {
+                DirectoryInfo dir = new DirectoryInfo(logFolder);
+                if (dir.Exists)
+                {
+                    var files = dir.GetFiles().Where(x => x.LastWriteTime < DateTime.Now.AddDays(0 - keepDay));
+
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            file.Delete();
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            });
+        }
     }
 
     class LogWritter

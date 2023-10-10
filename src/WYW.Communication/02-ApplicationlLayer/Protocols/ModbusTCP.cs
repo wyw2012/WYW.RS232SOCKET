@@ -36,11 +36,22 @@ namespace WYW.Communication.Protocol
         {
             FullBytes = fullBytes;
             FriendlyText = FullBytes.ToHexString();
-            Content = fullBytes.SubBytes(8, fullBytes.Length - 8);
-            Tag = $"{fullBytes[6]:X2}{fullBytes[7]:X2}"; // 节点ID+指令码
-            SlaveID = fullBytes[6];
-            Command = (ModbusCommand)fullBytes[7];
-            TransactionID  =(UInt16)((fullBytes[0]<<8)+ fullBytes[1]);
+            if(FullBytes.Length==9) // 异常帧
+            {
+                Content = fullBytes.SubBytes(7, 1); // 故障码
+                Tag = null;
+            }
+            else
+            {
+                Content = fullBytes.SubBytes(8, fullBytes.Length - 8);
+                Tag = $"{fullBytes[6]:X2}{fullBytes[7]:X2}"; // 节点ID+指令码
+                SlaveID = fullBytes[6];
+                Command = (ModbusCommand)fullBytes[7];
+                TransactionID = (UInt16)((fullBytes[0] << 8) + fullBytes[1]);
+            }
+
+
+          
         }
         public static List<ProtocolBase> Analyse(List<byte> buffer)
         {
@@ -88,7 +99,5 @@ namespace WYW.Communication.Protocol
         public ModbusCommand Command { get; private set; }
         #endregion
 
-
-   
     }
 }

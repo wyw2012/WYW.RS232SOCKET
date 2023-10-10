@@ -33,9 +33,5 @@ namespace WYW.Communication.ApplicationlLayer
         /// 心跳间隔时间，单位：s，默认5s
         /// </summary>
         public int IntervalSeconds { get; set; } = 5;
-        /// <summary>
-        /// 心跳事件触发条件，默认状态改变时触发
-        /// </summary>
-        public HeartbeatTriggerCondition HeartbeatTriggerCondition { get; set; }
     }
 }

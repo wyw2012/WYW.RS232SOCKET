@@ -9,6 +9,9 @@ using DataReceivedEventArgs = WYW.Communication.TransferLayer.DataReceivedEventA
 using WYW.Communication.ApplicationlLayer;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using System.Globalization;
+using System.IO;
+using System.Diagnostics;
 
 namespace WYW.Communication
 {
@@ -19,9 +22,8 @@ namespace WYW.Communication
     {
         private bool disposed = false;
         private bool isOpened = false;
-        private static object ReadLock = new object();
+        private object ReadLock = new object();
         private List<byte> receiveBuffer = new List<byte>();
-        private DateTime lastReceiveTime = DateTime.Now; // 最后一次接收数据的时间
         private Thread sendThread = null, heartbeatThread = null;
         private bool isKeepSendThreadAlive = true, isKeepHeartbeatTheadAlive = true;
         private ConcurrentQueue<ProtocolTransmitModel> SendQueue = new ConcurrentQueue<ProtocolTransmitModel>();
@@ -72,10 +74,20 @@ namespace WYW.Communication
                 }
             }
         }
+
+        private int? deviceID;
+
         /// <summary>
         /// 设备编号，用于多设备之间的区分
         /// </summary>
-        public int DeviceID { get; set; }
+        public int? DeviceID
+        {
+            get => deviceID;
+            set
+            {
+                SetProperty(ref deviceID, value);
+            }
+        }
 
         public TransferBase Client { get; }
         /// <summary>
@@ -151,7 +163,6 @@ namespace WYW.Communication
             }
             if (Client != null)
             {
-                Client.Open();
                 Client.DataReceivedEvent += Client_DataReceivedEvent;
                 Client.StatusChangedEvent += Client_StatusChangedEvent;
                 isOpened = true;
@@ -159,7 +170,7 @@ namespace WYW.Communication
                 heartbeatThread.Start();
                 sendThread = new Thread(ProcessSendQueue) { IsBackground = true };
                 sendThread.Start();
-
+                Client.Open();
             }
         }
 
@@ -167,7 +178,7 @@ namespace WYW.Communication
         {
             if (LogEnabled)
             {
-                Logger.WriteLine(LogFolder, e.ToString());
+                Logger.WriteLine(GetLogFolder(), e.ToString());
             }
         }
 
@@ -278,27 +289,25 @@ namespace WYW.Communication
         #region 保护方法
         protected virtual void OnDataReceived(ProtocolBase e)
         {
-            Task.Run(() =>
+            ProtocolReceivedEvent?.Invoke(this, e);
+            if (LogEnabled)
             {
-                ProtocolReceivedEvent?.Invoke(this, e);
-                if (LogEnabled)
-                {
-                    Logger.WriteLine(LogFolder, $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
-                }
-            });
-
+                Logger.WriteLine(GetLogFolder(), $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {e.FriendlyText}");
+            }
         }
         protected virtual void OnDataTransmited(ProtocolBase e)
         {
-            Task.Run(() =>
+            ProtocolTransmitedEvent?.Invoke(this, e);
+
+            if (LogEnabled)
             {
-                ProtocolTransmitedEvent?.Invoke(this, e);
-                if (LogEnabled)
-                {
-                    Logger.WriteLine(LogFolder, $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
-                }
-            });
+                Logger.WriteLine(GetLogFolder(), $"[{e.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {e.FriendlyText}");
+            }
         }
+        /// <summary>
+        /// 心跳触发方法，根据Result.IsSuccess判断心跳是否成功
+        /// </summary>
+        /// <param name="result"></param>
         protected virtual void OnHeartbeatTriggered(ExecutionResult result)
         {
 
@@ -360,7 +369,7 @@ namespace WYW.Communication
                 }
                 else
                 {
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                     return ExecutionResult.Failed(Properties.Message.CommunicationTimeout);
                 }
 
@@ -401,9 +410,9 @@ namespace WYW.Communication
                                 {
                                     Client.Read(cmd.ResponseTimeout);
                                 }
-                                while (!cmd.HasReceiveResponse)
+                                while ((DateTime.Now - cmd.LastWriteTime).TotalMilliseconds <= cmd.ResponseTimeout)
                                 {
-                                    if ((DateTime.Now - cmd.LastWriteTime).TotalMilliseconds >= cmd.ResponseTimeout)
+                                    if (cmd.HasReceiveResponse)
                                     {
                                         break;
                                     }
@@ -441,18 +450,19 @@ namespace WYW.Communication
         }
         private void Write(ProtocolTransmitModel arg)
         {
+            arg.SendBody.CreateTime = arg.LastWriteTime = DateTime.Now;
             try
             {
                 // 建立连接后才发送
                 if (Client.IsEstablished)
                 {
-                    arg.LastWriteTime = DateTime.Now;
                     OnDataTransmited(arg.SendBody);
                     Client.Write(arg.SendBody.FullBytes);
                 }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex.ToString());
             }
 
         }
@@ -462,7 +472,6 @@ namespace WYW.Communication
 
         private void Client_DataReceivedEvent(object sender, DataReceivedEventArgs e)
         {
-            LastReceiveTime = DateTime.Now;
             List<ProtocolBase> items = new List<ProtocolBase>();
             lock (ReadLock)
             {
@@ -471,44 +480,46 @@ namespace WYW.Communication
                 {
                     receiveBuffer.Clear();
                 }
-                lastReceiveTime = DateTime.Now;
                 receiveBuffer.AddRange(e.Data);
-
-                // 按照不同的协议格式进行解析
-                switch (ProtocolType)
-                {
-                    case ProtocolType.HexBare:
-                        items = HexBare.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.AsciiCRLF:
-                        items = AsciiCRLF.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.AsciiCR:
-                        items = AsciiCR.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.AsciiLF:
-                        items = AsciiLF.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.AsciiCheckSum:
-                        items = AsciiCheckSum.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.ModbusTCP:
-                        items = ModbusTCP.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.ModbusRTU:
-                        items = ModbusRTU.Analyse(receiveBuffer);
-                        break;
-                    case ProtocolType.AsciiBare:
-                        // 接收到最后一个字节延迟20ms，如果未接收到新数据，再分析结果
-                        Thread.Sleep(20);
-                        if ((DateTime.Now - lastReceiveTime).TotalMilliseconds < 20)
-                        {
-                            return;
-                        }
-                        items = AsciiBare.Analyse(receiveBuffer);
-                        break;
-                }
             }
+
+            LastReceiveTime = DateTime.Now;
+            // 按照不同的协议格式进行解析
+            switch (ProtocolType)
+            {
+                case ProtocolType.HexBare:
+                    items = HexBare.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.AsciiCRLF:
+                    items = AsciiCRLF.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.AsciiCR:
+                    items = AsciiCR.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.AsciiLF:
+                    items = AsciiLF.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.AsciiCheckSum:
+                    items = AsciiCheckSum.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.ModbusTCP:
+                    items = ModbusTCP.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.ModbusRTU:
+                    items = ModbusRTU.Analyse(receiveBuffer);
+                    break;
+                case ProtocolType.AsciiBare:
+                    // 接收到最后一个字节延迟20ms，如果未接收到新数据，再分析结果
+                    Thread.Sleep(20);
+                    if ((DateTime.Now - LastReceiveTime).TotalMilliseconds < 20)
+                    {
+                        return;
+                    }
+                    items = AsciiBare.Analyse(receiveBuffer);
+                    break;
+            }
+
+
             // 如果接收到符合协议的数据，则认为通讯成功
             if (items.Count > 0)
             {
@@ -551,6 +562,7 @@ namespace WYW.Communication
                     Thread.Sleep(2000);
                     continue;
                 }
+
                 if (!Client.IsEstablished)
                 {
                     Thread.Sleep(2000);
@@ -559,8 +571,8 @@ namespace WYW.Communication
                 if ((DateTime.Now - LastReceiveTime).TotalSeconds >= Heartbeat.IntervalSeconds)
                 {
                     var result = SendProtocol(Heartbeat.Content, true, Heartbeat.MaxRetryCount, Heartbeat.Timeout);
-                    InvokeHeartbeatTriggered(result);
                     IsConnected = result.IsSuccess;
+                    InvokeHeartbeatTriggered(result);
                 }
                 Thread.Sleep(2000);
             }
@@ -568,30 +580,23 @@ namespace WYW.Communication
 
         private void InvokeHeartbeatTriggered(ExecutionResult result)
         {
-            switch (Heartbeat.HeartbeatTriggerCondition)
-            {
-                case HeartbeatTriggerCondition.Always:
-                    Task.Run(() =>
-                    {
-                        HeartbeatTriggeredEvent?.Invoke(this, result);
-                        OnHeartbeatTriggered(result);
-                    });
-                    break;
-                case HeartbeatTriggerCondition.Changed:
-                    if (IsConnected != result.IsSuccess)
-                    {
-                        Task.Run(() =>
-                        {
-                            HeartbeatTriggeredEvent?.Invoke(this, result);
-                            OnHeartbeatTriggered(result);
-                        });
-                    }
-                    break;
-            }
+            HeartbeatTriggeredEvent?.Invoke(this, result);
+            OnHeartbeatTriggered(result);
         }
         #endregion
 
 
+        private string GetLogFolder()
+        {
+            if (DeviceID != null)
+            {
+                return Path.Combine(LogFolder, DeviceID.ToString());
+            }
+            else
+            {
+                return LogFolder;
+            }
+        }
 
         #endregion
 
@@ -599,11 +604,25 @@ namespace WYW.Communication
 
         private void Client_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (!Heartbeat.IsEnabled || Heartbeat.Content == null)
+            switch (e.PropertyName)
             {
-                // 握手信息改变，则连接状态也同步改变
-                IsConnected = Client.IsEstablished;
+                case "IsEstablished":
+                    if (!Heartbeat.IsEnabled || Heartbeat.Content == null)
+                    {
+                        // 如果无心跳，则IsConnected跟随Client.IsEstablished
+                        IsConnected = Client.IsEstablished;
+                    }
+                    else
+                    {
+                        // 如果有心跳，但是连接断开，则连接状态为false
+                        if (!Client.IsEstablished)
+                        {
+                            IsConnected = false;
+                        }
+                    }
+                    break;
             }
+
         }
         #endregion
 

@@ -34,6 +34,9 @@ namespace WYW.RS232SOCKET
                 }
             }
             UI.Theme.AutoFitResolution();
+         
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("zh-CN");
             this.DispatcherUnhandledException += App_DispatcherUnhandledException; // UI线程
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException; // 非UI线程
             base.OnStartup(e);

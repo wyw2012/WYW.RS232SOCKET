@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +14,12 @@ namespace WYW.Communication.TransferLayer
         private Socket clientSocket;
         private readonly System.Net.IPEndPoint ipep;
         private readonly byte[] inBuffer;
+        private string serverIP;
         
 
         public TCPClient(string ip, int port, int receiveBufferSize = 4096)
         {
+            serverIP = ip;
             inBuffer = new byte[receiveBufferSize];
             ipep = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(ip), port);
             //将网络端点表示为IP地址和端口 用于socket侦听时绑定   
@@ -35,25 +38,33 @@ namespace WYW.Communication.TransferLayer
                 {
                     while (IsOpen)
                     {
-                        try
+                        if(TryPing(serverIP))
                         {
-                            clientSocket.Connect(ipep);
-                            OnStatusChanged($"Socket Client已建立连接。本地节点：{clientSocket.LocalEndPoint}");
-                            IsEstablished = true;
-                            clientSocket_DataReceived();
-                        }
-                        // 目标主机未开启socket
-                        catch (SocketException)
-                        {
-                            //Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Cann't connect server.");
-                        }
-                        // 目标主机主动断开socket
-                        catch (InvalidOperationException ex)
-                        {
-                            IsEstablished = false;
-                            OnStatusChanged($"远程主机主动断开连接。{ex.Message}");
-                            clientSocket.Close();
-                            clientSocket = new Socket(ipep.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                            try
+                            {
+                                if(clientSocket==null)
+                                {
+                                    clientSocket = new Socket(ipep.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                                }
+                                clientSocket.Connect(ipep);
+                                OnStatusChanged($"Socket Client已建立连接。本地节点：{clientSocket.LocalEndPoint}");
+                                IsEstablished = true;
+                               
+                                clientSocket_DataReceived();
+                            }
+                            // 目标主机未开启socket
+                            catch (SocketException)
+                            {
+                                //Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Cann't connect server.");
+                            }
+                            // 目标主机主动断开socket
+                            catch (InvalidOperationException ex)
+                            {
+                                IsEstablished = false;
+                                clientSocket.Close();
+                                clientSocket = null;
+                                OnStatusChanged($"远程主机主动断开连接。{ex.Message}");
+                            }
                         }
                         Thread.Sleep(2000);
                     }
@@ -80,8 +91,8 @@ namespace WYW.Communication.TransferLayer
             {
                 try
                 {
-                    clientSocket.Send(content);
                     OnDataTransmited(content);
+                    clientSocket.Send(content);
                 }
                 catch (Exception ex)
                 {
@@ -89,6 +100,7 @@ namespace WYW.Communication.TransferLayer
                 }
             }
         }
+
         #endregion
         private void clientSocket_DataReceived()
         {
@@ -106,15 +118,42 @@ namespace WYW.Communication.TransferLayer
                         }
                     }
                 }
+                catch(ObjectDisposedException ex) 
+                {
+                    clientSocket=null;
+                    OnStatusChanged($"接收数据异常，{ex.Message}");
+                    break;
+                }
                 catch (Exception ex)
                 {
                     // 连接中断了
                     IsEstablished = false;
-                    OnStatusChanged($"接收数据异常，{ex.Message}");
+                    OnStatusChanged($"接收数据异常，{ex.Message}，{ex.GetType().Name}");
                     break; // 退出本次接收线程
                 }
                 Thread.Sleep(1);
             }
+        }
+
+        private bool TryPing(string ip)
+        {
+            try
+            {
+                using (Ping ping = new Ping())
+                {
+                    var replay = ping.Send(ip, 100);
+                    if (replay != null && replay.Status == IPStatus.Success)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch 
+            {
+
+            }
+    
+            return false;
         }
     }
 }

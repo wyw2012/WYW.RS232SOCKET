@@ -12,12 +12,23 @@ namespace WYW.Communication.TransferLayer
         {
             Data = data;
         }
+        /// <summary>
+        /// 设备标识符，用于区分设备
+        /// </summary>
+        internal string DeviceID { get; set; }
         public byte[] Data { get; }
         public DateTime CreateTime { get; } = DateTime.Now;
 
         public override string ToString()
         {
-            return $"[{CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {Data.ToHexString()}";
+            if (DeviceID == null)
+            {
+                return $"[{CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {Data.ToHexString()}";
+            }
+            else
+            {
+                return $"[{CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] [{DeviceID}] {Data.ToHexString()}";
+            }
         }
         public string ToUTF8()
         {

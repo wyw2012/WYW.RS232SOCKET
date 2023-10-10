@@ -98,7 +98,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadDiscreteInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out bool[] discreteInput, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadDiscreteInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out bool[] discreteInput, int maxSendCount = 1, int responseTimeout = 300)
         {
             discreteInput = new bool[count];
             List<byte> content = new List<byte>();
@@ -133,14 +133,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
             return result;
@@ -157,7 +157,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadCoils(int slaveID, UInt16 startAddress, UInt16 count, out bool[] coil, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadCoils(int slaveID, UInt16 startAddress, UInt16 count, out bool[] coil, int maxSendCount = 1, int responseTimeout = 300)
         {
             coil = new bool[count];
             List<byte> content = new List<byte>();
@@ -192,14 +192,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
             return result;
@@ -216,7 +216,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadHoldingRegisters(int slaveID, UInt16 startAddress, UInt16 count, out UInt16[] value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadHoldingRegisters(int slaveID, UInt16 startAddress, UInt16 count, out UInt16[] value, int maxSendCount = 1, int responseTimeout = 300)
         {
             value = new ushort[count];
             List<byte> content = new List<byte>();
@@ -238,14 +238,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
 
@@ -262,7 +262,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadHoldingRegisters(int slaveID, UInt16 startAddress, UInt16 count, out byte[] byteArray, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadHoldingRegisters(int slaveID, UInt16 startAddress, UInt16 count, out byte[] byteArray, int maxSendCount = 1, int responseTimeout = 300)
         {
             byteArray = new byte[count * 2];
             List<byte> content = new List<byte>();
@@ -281,14 +281,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
             return result;
@@ -304,7 +304,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out UInt16[] value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out UInt16[] value, int maxSendCount = 1, int responseTimeout = 300)
         {
             value = new ushort[count];
             List<byte> content = new List<byte>();
@@ -326,14 +326,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
 
@@ -349,7 +349,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out byte[] byteArray, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadInputRegisters(int slaveID, UInt16 startAddress, UInt16 count, out byte[] byteArray, int maxSendCount = 1, int responseTimeout = 300)
         {
             byteArray = new byte[count * 2];
             List<byte> content = new List<byte>();
@@ -368,14 +368,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
 
@@ -390,7 +390,7 @@ namespace WYW.Communication
         /// <param name="value">线圈状态</param>
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
-        public ExecutionResult WriteCoil(int slaveID, UInt16 address, bool value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult WriteCoil(int slaveID, UInt16 address, bool value, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
@@ -405,7 +405,7 @@ namespace WYW.Communication
             var result = SendCommand(slaveID, ModbusCommand.WriteOneCoil, content.ToArray(), maxSendCount, responseTimeout);
             if (!result.IsSuccess)
             {
-                DeviceStatus = DeviceStatus.Warning;
+                //DeviceStatus = DeviceStatus.Warning;
             }
             return result;
         }
@@ -418,7 +418,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegister(int slaveID, UInt16 address, UInt16 value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult WriteHoldingRegister(int slaveID, UInt16 address, UInt16 value, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
@@ -435,7 +435,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteCoils(int slaveID, UInt16 startAddress, bool[] coil, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult WriteCoils(int slaveID, UInt16 startAddress, bool[] coil, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
@@ -472,7 +472,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, UInt16[] value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, UInt16[] value, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
@@ -495,7 +495,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, byte[] value, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, byte[] value, int maxSendCount = 1, int responseTimeout = 300)
         {
             if (value.Length % 2 == 1)
             {
@@ -522,7 +522,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult ReadAndWriteHoldingRegisters(int slaveID, UInt16 startReadAddress, UInt16 readCount, UInt16 startWriteAddress, UInt16[] writeValues, out UInt16[] readValues, int maxSendCount = 1, int responseTimeout = 200)
+        public ExecutionResult ReadAndWriteHoldingRegisters(int slaveID, UInt16 startReadAddress, UInt16 readCount, UInt16 startWriteAddress, UInt16[] writeValues, out UInt16[] readValues, int maxSendCount = 1, int responseTimeout = 300)
         {
             readValues = new ushort[readCount];
             List<byte> content = new List<byte>();
@@ -552,14 +552,14 @@ namespace WYW.Communication
                     {
                         result.IsSuccess = false;
                         result.ErrorMessage = "返回字节长度不满足协议要求";
-                        DeviceStatus = DeviceStatus.Warning;
+                        //DeviceStatus = DeviceStatus.Warning;
                     }
                 }
                 else
                 {
                     result.IsSuccess = false;
                     result.ErrorMessage = "返回内容为空";
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                 }
             }
 
@@ -1045,7 +1045,7 @@ namespace WYW.Communication
         #endregion
 
         #region 私有函数
-        private ExecutionResult SendCommand(int slaveID, ModbusCommand cmd, byte[] content, int maxSendCount = 1, int responseTimeout = 200)
+        private ExecutionResult SendCommand(int slaveID, ModbusCommand cmd, byte[] content, int maxSendCount = 1, int responseTimeout = 300)
         {
             if (!IsConnected)
             {
@@ -1066,7 +1066,7 @@ namespace WYW.Communication
                 // 报错
                 if (result.Response.Content.Length == 1)
                 {
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                     // 报错码
                     switch (result.Response.Content[0])
                     {

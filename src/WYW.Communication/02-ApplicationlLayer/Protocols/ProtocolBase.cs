@@ -32,7 +32,7 @@ namespace WYW.Communication.Protocol
 
         #region  内部成员
         /// <summary>
-        /// 指令的标识符，用于验证发送的指令与接收的指令是否匹配
+        /// 指令的标识符，用于验证发送的指令与接收的指令是否匹配，如果为null，则表示接收到了异常帧
         /// </summary>
         internal string Tag { get; set; }=String.Empty;
 
@@ -41,9 +41,13 @@ namespace WYW.Communication.Protocol
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        internal bool IsMatch(ProtocolBase obj)
+        internal  bool IsMatch(ProtocolBase obj)
         {
-            if(Tag==obj.Tag)
+            if (obj.Tag==null)
+            {
+                return true;
+            }
+            if (Tag==obj.Tag)
             {
                 return true;
             }

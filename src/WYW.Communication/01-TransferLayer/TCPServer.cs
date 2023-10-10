@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace WYW.Communication.TransferLayer
 {
@@ -23,7 +24,7 @@ namespace WYW.Communication.TransferLayer
             this.maxClientCount = maxClientCount;
             serverSocket = new Socket(ipep.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
         }
-
+    
         #region 实现虚方法
         public override void Open()
         {
@@ -124,7 +125,8 @@ namespace WYW.Communication.TransferLayer
                             if (receivedCount > 0) //如果接收的消息为空 阻塞当前循环  
                             {
                                 lastActiveClientSocket = client;
-                                OnDataReceived(inBuffer.Take(receivedCount).ToArray());
+                                var buffer = inBuffer.Take(receivedCount).ToArray();
+                                OnDataReceived(buffer);
                             }
                         }
                     }

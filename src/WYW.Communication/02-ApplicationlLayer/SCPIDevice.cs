@@ -55,7 +55,7 @@ namespace WYW.Communication.ApplicationlLayer
                 }
                 catch (Exception ex)
                 {
-                    DeviceStatus = DeviceStatus.Warning;
+                    //DeviceStatus = DeviceStatus.Warning;
                     result.IsSuccess = false;
                     result.ErrorMessage = ex.Message;
                 }

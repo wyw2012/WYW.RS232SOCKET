@@ -31,10 +31,19 @@ namespace WYW.Communication.Protocol
         {
             FullBytes = fullBytes;
             FriendlyText = FullBytes.ToHexString();
-            Content = fullBytes.SubBytes(2, fullBytes.Length - 4);
-            Tag = $"{fullBytes[0]:X2}{fullBytes[1]:X2}";  // 节点ID+指令码
-            SlaveID = fullBytes[0];
-            Command = (ModbusCommand)fullBytes[1];
+            if(fullBytes.Length==4) // 异常帧
+            {
+                Content = fullBytes.SubBytes(2, 1); // 故障码
+                Tag = null;
+            }
+            else
+            {
+                Content = fullBytes.SubBytes(2, fullBytes.Length - 4);
+                Tag = $"{fullBytes[0]:X2}{fullBytes[1]:X2}";  // 节点ID+指令码
+                SlaveID = fullBytes[0];
+                Command = (ModbusCommand)fullBytes[1];
+            }
+  
         }
         public static List<ProtocolBase> Analyse(List<byte> buffer)
         {

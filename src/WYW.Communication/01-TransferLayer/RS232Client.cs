@@ -7,7 +7,7 @@ namespace WYW.Communication.TransferLayer
     {
         private readonly SerialPort serialPort;
         private readonly int writeBufferSize;
-        private static object ReadLocker = new object();
+        private object ReadLocker = new object();
         #region 构造函数
 
         public RS232Client(string portName, int baudRate = 9600, int parity = 0, int dataBits = 8, int stopBits = 1, int writeBufferSize = 4096, int receiveBufferSize = 4096)
