@@ -151,7 +151,7 @@ namespace WYW.RS232SOCKET.ViewModels
                 MessageBox.Error("请先选择一个IP地址段");
                 return;
             }
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 try
                 {

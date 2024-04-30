@@ -24,12 +24,12 @@ namespace WYW.Communication.TransferLayer
                 return;
             if (clientSocket != null)
             {
-                IsOpen = true;
+                IsEstablished = IsOpen = true;
                 ThreadPool.QueueUserWorkItem(delegate
                 {
                     clientSocket_DataReceived();
                 });
-                OnStatusChanged("UDP Server已开启。");
+                OnStatusChanged("UDP Client已开启。");
             }
         }
 
@@ -42,7 +42,7 @@ namespace WYW.Communication.TransferLayer
                 clientSocket.Close();
             }            
             IsEstablished= IsOpen = false;          
-            OnStatusChanged("UDP Server已主动关闭。");
+            OnStatusChanged("UDP Client已主动关闭。");
         }
         public override void Write(byte[] content)
         {
@@ -55,7 +55,6 @@ namespace WYW.Communication.TransferLayer
                 }
                 catch (Exception ex)
                 {
-                    IsEstablished = false;
                     OnStatusChanged($"发送失败，发送数据：{content.ToHexString()}，原因：{ex.Message}");
                 }
             }
@@ -70,13 +69,11 @@ namespace WYW.Communication.TransferLayer
                     inBuffer = clientSocket.Receive(ref remoteIpep);
                     if (inBuffer.Length > 0) //如果接收的消息为空 阻塞当前循环  
                     {
-                        IsEstablished = true;
                         OnDataReceived(inBuffer);
                     }
                 }
                 catch (Exception ex)
                 {
-                    IsEstablished = false;
                     OnStatusChanged($"接收数据异常，{ex.Message}");
                 }
                 Thread.Sleep(1);

@@ -1,5 +1,6 @@
 ﻿using Ivi.Visa;
 using NationalInstruments.Visa;
+using NationalInstruments.Visa.Internal;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -48,14 +49,24 @@ namespace WYW.Communication.TransferLayer
                     {
                         using (var rmSession = new ResourceManager())
                         {
-                           var resouces=  rmSession.Find("(ASRL|GPIB|TCPIP|USB)?*");
-                            if(resouces.Any(x=>x==resourceName))
+                            var resouces = rmSession.Find("(ASRL|GPIB|TCPIP|USB)?*");
+                            if (resouces.Any(x => x == resourceName))
                             {
-                                mbSession?.Dispose();
+                                mbSession?.DisposeIfNotNull();
                                 mbSession = (MessageBasedSession)rmSession.Open(resourceName);
-                                mbSession.Clear();
+
                                 mbSession.TerminationCharacter = TerminationCharacter;
-                                //mbSession.TerminationCharacterEnabled=true;
+                                mbSession.TerminationCharacterEnabled = true;
+                                mbSession.Clear();
+                                // 清空IO缓存，没有其它方式，只能通过读取方法清空
+                                try
+                                {
+                                    mbSession.RawIO.Read();
+                                }
+                                catch (Exception ex)
+                                {
+                                }
+
                                 OnStatusChanged($"VISA已建立连接");
                                 IsEstablished = true;
                                 if (IsAutoReceiveData)
@@ -63,7 +74,7 @@ namespace WYW.Communication.TransferLayer
                                     VISA_DataReceived();
                                 }
                             }
-                           
+
                         }
                     }
                     catch (Exception ex)
@@ -98,7 +109,7 @@ namespace WYW.Communication.TransferLayer
         {
             try { mbSession?.Clear(); } catch { }
         }
-        public override byte[] Read(int timeout = 2000)
+        public override byte[] Read()
         {
             if(IsAutoReceiveData)
             {
@@ -108,13 +119,18 @@ namespace WYW.Communication.TransferLayer
                 return new byte[0];
             try
             {
-                mbSession.TimeoutMilliseconds = timeout;
+                mbSession.TimeoutMilliseconds = TimeoutMilliseconds;
                 var buffer = mbSession.RawIO.Read();
                 if (buffer.Length > 0)
                 {
                     OnDataReceived(buffer);
                     return buffer;
                 }
+            }
+            catch(NativeVisaException ex)
+            {
+                IsEstablished=false;
+                Debug.WriteLine(ex.ToString());
             }
             catch (Exception ex)
             {
@@ -129,7 +145,7 @@ namespace WYW.Communication.TransferLayer
         /// 接收终止符
         /// </summary>
         public byte TerminationCharacter { get; set; } = 0x0A;
-
+        public int TimeoutMilliseconds { get; set; } = 2000;
         /// <summary>
         /// 自动接收数据，经过验证，该方法不可靠
         /// </summary>
@@ -139,6 +155,7 @@ namespace WYW.Communication.TransferLayer
             {
                 try
                 {
+                    mbSession.TimeoutMilliseconds = TimeoutMilliseconds;
                     // 只能接收以0x0A结尾的数组
                     var buffer = mbSession.RawIO.Read();
                     if (buffer.Length > 0)
@@ -149,7 +166,7 @@ namespace WYW.Communication.TransferLayer
                 catch (IOTimeoutException ex)
                 {
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     // 连接中断了
                     IsEstablished = false;

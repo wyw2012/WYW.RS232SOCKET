@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using WYW.Communication;
+using WYW.Communication.TransferLayer;
 using WYW.RS232SOCKET.Models;
 using WYW.UI.Controls;
 using MessageBox = WYW.UI.Controls.MessageBoxWindow;
@@ -85,6 +86,10 @@ namespace WYW.RS232SOCKET.ViewModels
                             }
 
                             Controller.Device.SendBytes(sendQueue[i]);
+                            if(!Controller.Device.Client.IsAutoReceiveData)
+                            {
+                                Controller.Device.Client.Read();
+                            }
                             Controller.Config.Status.Progress = ((i + 1) * 100) / sendQueue.Count;
                             if (i != sendQueue.Count - 1 || Controller.Config.Send.IsCyclic)
                             {

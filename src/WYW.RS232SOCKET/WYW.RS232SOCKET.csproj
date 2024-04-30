@@ -71,6 +71,7 @@
     <Compile Include="Ioc.cs" />
     <Compile Include="Models\ConfigModel.cs" />
     <Compile Include="Models\DeviceController.cs" />
+    <Compile Include="Models\LineGraphModel.cs" />
     <Compile Include="Models\ModbusScriptModel.cs" />
     <Compile Include="Models\NormalScriptModel.cs" />
     <Compile Include="MVVMHelper\ObservableObject.cs" />
@@ -183,13 +184,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Lib\GemBox.Spreadsheet.dll" />
+    <Content Include="Lib\InteractiveDataDisplay.WPF.dll" />
+    <Content Include="Lib\Microsoft.Maps.MapControl.WPF.dll" />
+    <Content Include="Lib\System.Reactive.Core.dll" />
+    <Content Include="Lib\System.Reactive.Interfaces.dll" />
+    <Content Include="Lib\System.Reactive.Linq.dll" />
+    <Content Include="Lib\System.Reactive.PlatformServices.dll" />
+    <Content Include="Lib\System.Reactive.Windows.Threading.dll" />
     <Resource Include="Lib\GemBox.Spreadsheet.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\WYW.UI\src\WYW.UI.csproj">
-      <Project>{2c10f4a1-a54c-48c3-bb48-e2a1898bec1b}</Project>
-      <Name>WYW.UI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\WYW.Communication\WYW.Communication.csproj">
       <Project>{ba88564e-03ac-418b-a8d3-1e549baad587}</Project>
       <Name>WYW.Communication</Name>
@@ -198,6 +202,10 @@
   <ItemGroup>
     <Reference Include="Costura, Version=5.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Costura.Fody.5.7.0\lib\netstandard1.0\Costura.dll</HintPath>
+    </Reference>
+    <Reference Include="InteractiveDataDisplay.WPF, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\InteractiveDataDisplay.WPF.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -225,6 +233,10 @@
     <Reference Include="GemBox.Spreadsheet, Version=43.0.35.1140, Culture=neutral, PublicKeyToken=b1b72c69714d4847, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\GemBox.Spreadsheet.dll</HintPath>
+    </Reference>
+    <Reference Include="WYW.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\WYW.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

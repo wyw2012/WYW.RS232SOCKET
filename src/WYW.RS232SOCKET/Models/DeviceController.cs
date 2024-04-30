@@ -34,12 +34,6 @@ namespace WYW.RS232SOCKET.Models
             if (IPList.Count > 0)
             {
               Config.TCPClient.RemoteIP = Config.TCPServer.LocalIP = Config.UDPClient.LocalIP = Config.UDPServer.LocalIP = IPList[0];
-                // 设置广播地址
-                var temp = IPList[0].Split('.');
-                if (temp.Length == 4)
-                {
-                    Config.UDPClient.BroadcastAddress = $"{temp[0]}.{temp[1]}.{temp[2]}.255";
-                }
             }
             if (PortNames.Length > 0)
             {
@@ -66,7 +60,8 @@ namespace WYW.RS232SOCKET.Models
             {
                 SetProperty(ref communicationType, value);
                 if (value == CommunicationType.UDPClient ||
-                    value == CommunicationType.UDPServer)
+                    value == CommunicationType.UDPServer ||
+                    value== CommunicationType.VISA)
                 {
                     ProtocolType = 0;
                 }
@@ -511,7 +506,7 @@ namespace WYW.RS232SOCKET.Models
                     {
                         throw new Exception("资源名称不能为空");
                     }
-                    client = new VISAClient(Config.VISA.ResourceName, true) { TerminationCharacter= Config.VISA.TerminationCharacter };
+                    client = new VISAClient(Config.VISA.ResourceName, false) { TerminationCharacter= Config.VISA.TerminationCharacter,TimeoutMilliseconds=Config.VISA.ReceiveTimeout };
                     break;
             }
             return client;

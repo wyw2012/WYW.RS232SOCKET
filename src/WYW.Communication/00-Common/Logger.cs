@@ -36,7 +36,7 @@ namespace WYW.Communication
                 DirectoryInfo dir = new DirectoryInfo(logFolder);
                 if (dir.Exists)
                 {
-                    var files = dir.GetFiles().Where(x => x.LastWriteTime < DateTime.Now.AddDays(0 - keepDay));
+                    var files = dir.GetFiles("*.*", SearchOption.AllDirectories).Where(x => x.LastWriteTime < DateTime.Now.AddDays(0 - keepDay));
 
                     foreach (var file in files)
                     {

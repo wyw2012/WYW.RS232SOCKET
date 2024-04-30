@@ -131,7 +131,6 @@ namespace WYW.Communication
         输入寄存器,
         离散量输入,
         线圈
-
     }
     public enum RegisterWriteType
     {

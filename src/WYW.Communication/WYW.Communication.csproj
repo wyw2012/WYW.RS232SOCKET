@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
@@ -29,6 +29,7 @@
 	  <Reference Include="NationalInstruments.Visa">
 	    <HintPath>Lib\NationalInstruments.Visa.dll</HintPath>
 	  </Reference>
+	  <Reference Include="PresentationFramework" />
 	</ItemGroup>
 
 	<ItemGroup>

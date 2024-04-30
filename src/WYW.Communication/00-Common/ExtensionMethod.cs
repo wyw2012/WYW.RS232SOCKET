@@ -118,7 +118,11 @@ namespace WYW.Communication
             Array values = Enum.GetValues(typeof(T));
             foreach (Enum item in values)
             {
-                if (description == GetDescription(item))
+                if (description == item.ToString())
+                {
+                    return item;
+                }
+                else if(description == GetDescription(item))
                 {
                     return item;
                 }
@@ -182,7 +186,32 @@ namespace WYW.Communication
         {
             return string.Join(" ", Regex.Split(text, @"(?<=\G.{2})(?!$)"));
         }
-
+        public static bool ToDoubleArray(this string text, out double[] values,char splitChar=',')
+        {
+            List<byte> list = new List<byte>();
+            if(splitChar!='\n' && splitChar!='\r' && splitChar !='\t' && splitChar!='\f' && splitChar!=' ')
+            {
+                 text = Regex.Replace(text, "\\s", "");
+            }
+            try
+            {
+                values = text.Split(splitChar).Select(x => double.Parse(x)).ToArray();
+                return true;
+            }
+            catch
+            {
+                values = new double[0];
+            }
+            return false;
+        }
+        public static int GetBit(this UInt16 source, int index)
+        {
+            if (index > 15)
+            {
+                throw new ArgumentException("索引不能大于15");
+            }
+            return (source >> index) & 1;
+        }
         public static T DeepClone<T>(this T input)
         {
             using (var ms = new MemoryStream())
@@ -193,6 +222,7 @@ namespace WYW.Communication
                 return (T)formatter.Deserialize(ms);
             }
         }
+
         public static IEnumerable<T> DataTableToList<T>(this DataTable dataTable)
         {
             List<T> list = new List<T>();

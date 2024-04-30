@@ -91,7 +91,7 @@ namespace WYW.Communication.TransferLayer
         /// <param name="timeout">超时时间，单位ms</param>
         /// <returns></returns>
         /// <exception cref="System.Exception"></exception>
-        public virtual byte[] Read(int timeout = 0)
+        public virtual byte[] Read()
         {
             throw new System.Exception("The read method is not supported, please use DataTransmitedEvent to instead it.");
         }

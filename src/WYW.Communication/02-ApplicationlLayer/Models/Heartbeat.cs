@@ -32,6 +32,6 @@ namespace WYW.Communication.ApplicationlLayer
         /// <summary>
         /// 心跳间隔时间，单位：s，默认5s
         /// </summary>
-        public int IntervalSeconds { get; set; } = 5;
+        public double IntervalSeconds { get; set; } = 5;
     }
 }

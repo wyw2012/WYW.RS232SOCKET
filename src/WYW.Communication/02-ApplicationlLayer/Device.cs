@@ -31,6 +31,9 @@ namespace WYW.Communication
 
 
         #region 构造函数
+        protected Device()
+        { 
+        }
         public Device(TransferBase client)
         {
             Client = client;
@@ -60,7 +63,13 @@ namespace WYW.Communication
             get => isConnected;
             set
             {
-                SetProperty(ref isConnected, value);
+                if (value!=isConnected)
+                {
+                    isConnected = value;
+                    OnPropertyChanged(nameof(IsConnected));
+                    Task.Run(OnWhenConnected);
+                }
+               // SetProperty(ref isConnected, value);
                 if (!value)
                 {
                     DeviceStatus = DeviceStatus.UnConnected;
@@ -312,6 +321,14 @@ namespace WYW.Communication
         {
 
         }
+        /// <summary>
+        /// 当IsConnected变化时
+        /// </summary>
+        /// <param name="result"></param>
+        protected virtual void OnWhenConnected()
+        {
+
+        }
         protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
@@ -338,7 +355,6 @@ namespace WYW.Communication
             {
                 return ExecutionResult.Success(null);
             }
-
             if (sendObject.GetType().Name != ProtocolType.ToString())
             {
                 throw new ArgumentException("发送的对象类型与协议类型不匹配，请设置属性ProtocolType");
@@ -357,7 +373,7 @@ namespace WYW.Communication
                 while (!arg.HasReceiveResponse)
                 {
                     // 超时退出
-                    if ((DateTime.Now - arg.CreateTime).TotalMilliseconds > arg.MaxSendCount * arg.ResponseTimeout)
+                    if ((DateTime.Now - arg.LastWriteTime).TotalMilliseconds > arg.MaxSendCount * arg.ResponseTimeout)
                     {
                         break;
                     }
@@ -408,7 +424,7 @@ namespace WYW.Communication
                                 // 如果手动接收数据，则调用读取方法
                                 if (!Client.IsAutoReceiveData)
                                 {
-                                    Client.Read(cmd.ResponseTimeout);
+                                    Client.Read();
                                 }
                                 while ((DateTime.Now - cmd.LastWriteTime).TotalMilliseconds <= cmd.ResponseTimeout)
                                 {
@@ -482,7 +498,6 @@ namespace WYW.Communication
                 }
                 receiveBuffer.AddRange(e.Data);
             }
-
             LastReceiveTime = DateTime.Now;
             // 按照不同的协议格式进行解析
             switch (ProtocolType)
@@ -521,10 +536,10 @@ namespace WYW.Communication
 
 
             // 如果接收到符合协议的数据，则认为通讯成功
-            if (items.Count > 0)
-            {
-                IsConnected = true;
-            }
+            //if (items.Count > 0)
+            //{
+            //    IsConnected = true;
+            //}
             ProcessProtocolItems(items);
         }
         private void ProcessProtocolItems(List<ProtocolBase> items)
@@ -539,7 +554,9 @@ namespace WYW.Communication
                     {
                         lastSendNeedResponse.HasReceiveResponse = true;
                         lastSendNeedResponse.ResponseBody = item;
+                       
                     }
+                   
 
                 }
                 OnDataReceived(item);
@@ -574,14 +591,14 @@ namespace WYW.Communication
                     IsConnected = result.IsSuccess;
                     InvokeHeartbeatTriggered(result);
                 }
-                Thread.Sleep(2000);
+                Thread.Sleep(200);
             }
         }
 
         private void InvokeHeartbeatTriggered(ExecutionResult result)
         {
-            HeartbeatTriggeredEvent?.Invoke(this, result);
             OnHeartbeatTriggered(result);
+            HeartbeatTriggeredEvent?.Invoke(this, result);
         }
         #endregion
 

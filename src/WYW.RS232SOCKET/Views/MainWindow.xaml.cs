@@ -26,7 +26,7 @@ namespace WYW.RS232SOCKET.Views
         public MainWindow()
         {
             InitializeComponent();
-            Title = "RS232 & Socket & Modbus & VISA调试助手 V2.0";
+            Title = "RS232 & Socket & Modbus & VISA调试助手 V2.3";
             this.DataContext = viewModel;
         }
 

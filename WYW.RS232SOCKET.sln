@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WYW.RS232SOCKET", "src\WYW.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WYW.Communication", "src\WYW.Communication\WYW.Communication.csproj", "{BA88564E-03AC-418B-A8D3-1E549BAAD587}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WYW.UI", "..\WYW.UI\src\WYW.UI.csproj", "{2C10F4A1-A54C-48C3-BB48-E2A1898BEC1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WYW.Modbus", "src\WYW.Modbus\WYW.Modbus.csproj", "{E6438112-1145-4F66-B359-7BEA132167C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA88564E-03AC-418B-A8D3-1E549BAAD587}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C10F4A1-A54C-48C3-BB48-E2A1898BEC1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C10F4A1-A54C-48C3-BB48-E2A1898BEC1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C10F4A1-A54C-48C3-BB48-E2A1898BEC1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C10F4A1-A54C-48C3-BB48-E2A1898BEC1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6438112-1145-4F66-B359-7BEA132167C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6438112-1145-4F66-B359-7BEA132167C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6438112-1145-4F66-B359-7BEA132167C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6438112-1145-4F66-B359-7BEA132167C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

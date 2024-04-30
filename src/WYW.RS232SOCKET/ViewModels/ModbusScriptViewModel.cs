@@ -1,4 +1,5 @@
 ﻿using GemBox.Spreadsheet;
+using InteractiveDataDisplay.WPF;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using WYW.Communication;
 using WYW.Communication.Models;
 using WYW.RS232SOCKET.Common;
@@ -23,7 +28,6 @@ namespace WYW.RS232SOCKET.ViewModels
         private CancellationTokenSource token = null;
         public ModbusScriptViewModel()
         {
-
         }
 
         #region 属性
@@ -57,13 +61,15 @@ namespace WYW.RS232SOCKET.ViewModels
         /// </summary>
         public bool IsExpanded { get => isExpanded; set => SetProperty(ref isExpanded, value); }
 
+        public ObservableCollection<LineGraphModel> Lines { get; } = new ObservableCollection<LineGraphModel>();
+
         #endregion
 
         #region 命令
 
         protected override void BindingCommand()
         {
-            StartCommand = new RelayCommand(Start);
+            StartCommand = new RelayCommand<FrameworkElement>(Start);
             StopCommand = new RelayCommand(Stop);
             AddCommand = new RelayCommand(Add);
             DeleteCommand = new RelayCommand(Delete);
@@ -71,13 +77,13 @@ namespace WYW.RS232SOCKET.ViewModels
             SaveFileCommand = new RelayCommand(SaveFile);
         }
 
-        public RelayCommand StartCommand { get; private set; }
+        public RelayCommand<FrameworkElement> StartCommand { get; private set; }
         public RelayCommand StopCommand { get; private set; }
         public RelayCommand AddCommand { get; private set; }
         public RelayCommand DeleteCommand { get; private set; }
         public RelayCommand OpenFileCommand { get; private set; }
         public RelayCommand SaveFileCommand { get; private set; }
-        private void Start()
+        private void Start(FrameworkElement element)
         {
             MessageControl.Clear();
             try
@@ -93,18 +99,43 @@ namespace WYW.RS232SOCKET.ViewModels
             {
                 return;
             }
+            if (element is Grid grid)
+            {
+                grid.Children.Clear();
+                Lines.Clear();
+                if(TargetCircleCount>1)
+                {
+                    var items = ScriptItems.Where(x => x.OperationType == OperationType.Read).ToArray();
+                    for (int i = 0; i < items.Length; i++)
+                    {
+                        if (Lines.Any(x => x.Description == items[i].Address.ToString()))
+                        {
+                            continue;
+                        }
+                        var lineModel = new LineGraphModel(items[i].Address.ToString(), RandomColor(i));
+                        var control = new LineGraph();
+                        control.SetBinding(LineGraph.DescriptionProperty, new Binding("Description") { Source = lineModel });
+                        control.SetBinding(LineGraph.StrokeProperty, new Binding("Stroke") { Source = lineModel });
+                        control.SetBinding(LineGraph.PointsProperty, new Binding("Points") { Source = lineModel });
+
+                        Lines.Add(lineModel);
+                        grid.Children.Add(control);
+                    }
+                }
+            }
             token = new CancellationTokenSource();
 
             Task.Run(() =>
             {
                 try
                 {
-
+                    
                     IsRunning = true;
                     ModbusMaster master = Controller.Device as ModbusMaster;
                     Controller.Config.Status.ProgressBarVisibility = Visibility.Visible;
                     for (int i = 0; i < TargetCircleCount; i++)
                     {
+                        // 清理上次状态
                         for (int j = 0; j < ScriptItems.Count; j++)
                         {
                             ScriptItems[j].Status = "";
@@ -127,6 +158,19 @@ namespace WYW.RS232SOCKET.ViewModels
                             if (result.IsSuccess)
                             {
                                 ScriptItems[j].Status = "成功";
+
+                                // 更新曲线
+                                if (TargetCircleCount > 1 && ScriptItems[j].OperationType == OperationType.Read)
+                                {
+                                    App.Current.Dispatcher.Invoke(() =>
+                                    {
+                                        var line = Lines.SingleOrDefault(x => x.Description == ScriptItems[j].Address.ToString());
+                                        if (line != null)
+                                        {
+                                            line.Points.Add(new Point(i, double.Parse(ScriptItems[j].Value)));
+                                        }
+                                    });
+                                }
                             }
                             else
                             {
@@ -263,10 +307,34 @@ namespace WYW.RS232SOCKET.ViewModels
                 throw new Exception($"参数集合不能为空");
             }
 
-            Register.ValicateAddress(ScriptItems);
+            //Register.ValicateAddress(ScriptItems);
             Register.ValicateValue(ScriptItems);
         }
 
+        private Brush RandomColor(int index)
+        {
+            Brush[] brush = {
+                Brushes.Red ,
+                Brushes.Lime,
+                Brushes.Gray,
+                Brushes.DodgerBlue,
+                Brushes.Black,
+                Brushes.Green,
+                Brushes.Coral,
+                Brushes.Brown,
+                Brushes.Blue,
+            };
+            if (index < brush.Length)
+            {
+                return brush[index];
+            }
+            else
+            {
+                Random ran = new Random((int)DateTime.Now.Ticks);
+                var color= Color.FromRgb((byte)ran.Next(0, 100), (byte)ran.Next(100, 255), (byte)ran.Next(60, 200));
+                return new SolidColorBrush(color);
+            }
+        }
 
 
         #endregion

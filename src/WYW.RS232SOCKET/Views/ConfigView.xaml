@@ -94,8 +94,8 @@
                                 <ComboBox wyw:ComboBoxElement.Title="本地地址:" SelectedItem="{Binding LocalIP}"  
                                       ItemsSource="{Binding DataContext.IPList,RelativeSource={RelativeSource AncestorType=GroupBox}}"/>
                                 <TextBox  wyw:TextBoxElement.Title="本地端口号：" Text="{Binding LocalPort}"/>
-                                <TextBox  wyw:TextBoxElement.Title="广播地址：" Text="{Binding BroadcastAddress}"/>
-                                <TextBox  wyw:TextBoxElement.Title="广播端口号：" Text="{Binding BroadcastPort}"/>
+                                <TextBox  wyw:TextBoxElement.Title="远程地址：" Text="{Binding BroadcastAddress}"/>
+                                <TextBox  wyw:TextBoxElement.Title="远程端口号：" Text="{Binding BroadcastPort}"/>
                                 <TextBox  wyw:TextBoxElement.Title="接收缓存 (byte)" Text="{Binding ReceiveBufferSize}"/>
 
                             </StackPanel>
@@ -132,6 +132,7 @@
                                                   ItemsSource="{Binding VISAResourceNames}"/>
                                 <TextBox  wyw:TextBoxElement.Title="接收终止符（0-255）" Text="{Binding Config.VISA.TerminationCharacter}"
                                           ToolTip="{Binding Config.VISA.TerminationCharacter,Converter={StaticResource ToHexConverter}}"/>
+                                <TextBox  wyw:TextBoxElement.Title="接收超时时间（ms）" Text="{Binding Config.VISA.ReceiveTimeout}"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>

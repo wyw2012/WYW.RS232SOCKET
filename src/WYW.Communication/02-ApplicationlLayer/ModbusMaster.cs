@@ -13,6 +13,7 @@ namespace WYW.Communication
     /// </summary>
     public class ModbusMaster : Device
     {
+        protected ModbusMaster() { }
         public ModbusMaster(TransferBase client, ModbusProtocolType protocolType = ModbusProtocolType.Auto) : base(client)
         {
         
@@ -55,11 +56,11 @@ namespace WYW.Communication
         /// <param name="slaveID">从站地址</param>
         /// <param name="address">读取寄存器的地址</param>
         /// <returns></returns>
-        public ProtocolBase CreateHeartBeatContent(byte slaveID, int address, RegisterType registerType = RegisterType.保持寄存器, UInt16 transactionID = 0)
+        public ProtocolBase CreateHeartBeatContent(byte slaveID, int address, int count = 1, RegisterType registerType = RegisterType.保持寄存器, UInt16 transactionID = 0)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes((UInt16)address, EndianType.BigEndian));
-            content.AddRange(BitConverterHelper.GetBytes((UInt16)1, EndianType.BigEndian));
+            content.AddRange(BitConverterHelper.GetBytes((UInt16)count, EndianType.BigEndian));
             ModbusCommand cmd = ModbusCommand.ReadMoreHoldingRegisters;
             switch (registerType)
             {
@@ -104,7 +105,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreDiscreteInputRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreDiscreteInputRegisters, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -163,7 +164,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreCoils, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreCoils, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -222,7 +223,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreHoldingRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreHoldingRegisters, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -268,7 +269,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreHoldingRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreHoldingRegisters, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -310,7 +311,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreInputResiters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreInputResiters, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -355,7 +356,7 @@ namespace WYW.Communication
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(count, EndianType.BigEndian));
-            var result = SendCommand(slaveID, ModbusCommand.ReadMoreInputResiters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadMoreInputResiters, content.ToArray(),true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -390,7 +391,7 @@ namespace WYW.Communication
         /// <param name="value">线圈状态</param>
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
-        public ExecutionResult WriteCoil(int slaveID, UInt16 address, bool value, int maxSendCount = 1, int responseTimeout = 300)
+        public ExecutionResult WriteCoil(int slaveID, UInt16 address, bool value,  bool isNeedResponse = true,int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
@@ -402,7 +403,7 @@ namespace WYW.Communication
             {
                 content.AddRange(new byte[] { 0x00, 0x00 });
             }
-            var result = SendCommand(slaveID, ModbusCommand.WriteOneCoil, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.WriteOneCoil, content.ToArray(), isNeedResponse, maxSendCount, responseTimeout);
             if (!result.IsSuccess)
             {
                 //DeviceStatus = DeviceStatus.Warning;
@@ -418,12 +419,12 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegister(int slaveID, UInt16 address, UInt16 value, int maxSendCount = 1, int responseTimeout = 300)
+        public ExecutionResult WriteHoldingRegister(int slaveID, UInt16 address, UInt16 value, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(address, EndianType.BigEndian));
             content.AddRange(BitConverterHelper.GetBytes(value, EndianType.BigEndian));
-            return SendCommand(slaveID, ModbusCommand.WriteOneHoldingRegister, content.ToArray(), maxSendCount, responseTimeout);
+            return SendCommand(slaveID, ModbusCommand.WriteOneHoldingRegister, content.ToArray(), isNeedResponse, maxSendCount, responseTimeout);
         }
 
         /// <summary>
@@ -435,7 +436,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteCoils(int slaveID, UInt16 startAddress, bool[] coil, int maxSendCount = 1, int responseTimeout = 300)
+        public ExecutionResult WriteCoils(int slaveID, UInt16 startAddress, bool[] coil, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
@@ -460,7 +461,7 @@ namespace WYW.Communication
                 }
             }
             content.AddRange(BitConverterHelper.GetBytes((UInt16)value, EndianType.BigEndian));
-            return SendCommand(slaveID, ModbusCommand.WriteMoreCoils, content.ToArray(), maxSendCount, responseTimeout);
+            return SendCommand(slaveID, ModbusCommand.WriteMoreCoils, content.ToArray(), isNeedResponse, maxSendCount, responseTimeout);
         }
 
         /// <summary>
@@ -472,7 +473,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, UInt16[] value, int maxSendCount = 1, int responseTimeout = 300)
+        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, UInt16[] value,  bool isNeedResponse = true,int maxSendCount = 1, int responseTimeout = 300)
         {
             List<byte> content = new List<byte>();
             content.AddRange(BitConverterHelper.GetBytes(startAddress, EndianType.BigEndian));
@@ -482,7 +483,7 @@ namespace WYW.Communication
             {
                 content.AddRange(BitConverterHelper.GetBytes(item, EndianType.BigEndian));
             }
-            return SendCommand(slaveID, ModbusCommand.WriteMoreHoldingRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            return SendCommand(slaveID, ModbusCommand.WriteMoreHoldingRegisters, content.ToArray(),isNeedResponse, maxSendCount, responseTimeout);
 
         }
 
@@ -495,7 +496,7 @@ namespace WYW.Communication
         /// <param name="maxSendCount">最大重发次数</param>
         /// <param name="responseTimeout">单次发送超时时间</param>
         /// <returns></returns>
-        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, byte[] value, int maxSendCount = 1, int responseTimeout = 300)
+        public ExecutionResult WriteHoldingRegisters(int slaveID, UInt16 startAddress, byte[] value, bool isNeedResponse = true, int maxSendCount = 1, int responseTimeout = 300)
         {
             if (value.Length % 2 == 1)
             {
@@ -507,7 +508,7 @@ namespace WYW.Communication
             content.Add((byte)(value.Length));
             content.AddRange(value);
 
-            return SendCommand(slaveID, ModbusCommand.WriteMoreHoldingRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            return SendCommand(slaveID, ModbusCommand.WriteMoreHoldingRegisters, content.ToArray(), isNeedResponse, maxSendCount, responseTimeout);
         }
 
         /// <summary>
@@ -535,7 +536,7 @@ namespace WYW.Communication
             {
                 content.AddRange(BitConverterHelper.GetBytes(item, EndianType.BigEndian));
             }
-            var result = SendCommand(slaveID, ModbusCommand.ReadWriteHoldingRegisters, content.ToArray(), maxSendCount, responseTimeout);
+            var result = SendCommand(slaveID, ModbusCommand.ReadWriteHoldingRegisters, content.ToArray(), true, maxSendCount, responseTimeout);
             if (result.IsSuccess)
             {
                 if (result.Response != null)
@@ -992,7 +993,7 @@ namespace WYW.Communication
 
         public ExecutionResult ReadWriteRegister(int slaveID, Register register, int responseTimeout = 300)
         {
-            UInt16[] uintValues;
+            byte[] bytes;
             bool[] boolValues;
             ExecutionResult result = ExecutionResult.Failed();
             switch (register.RegisterType)
@@ -1000,10 +1001,10 @@ namespace WYW.Communication
                 case RegisterType.保持寄存器:
                     if (register.OperationType == OperationType.Read)
                     {
-                        result = ReadHoldingRegisters(slaveID, (UInt16)register.Address, 1, out uintValues, responseTimeout: responseTimeout);
+                        result = ReadHoldingRegisters(slaveID, (UInt16)register.Address, (UInt16)register.RegisterCount, out bytes, responseTimeout: responseTimeout);
                         if (result.IsSuccess)
                         {
-                            register.Value = uintValues[0].ToString();
+                            register.Value = register.GetValue(bytes,0);
                         }
                     }
                     else
@@ -1012,10 +1013,10 @@ namespace WYW.Communication
                     }
                     break;
                 case RegisterType.输入寄存器:
-                    result = ReadInputRegisters(slaveID, (UInt16)register.Address, 1, out uintValues, responseTimeout: responseTimeout);
+                    result = ReadInputRegisters(slaveID, (UInt16)register.Address, (UInt16)register.RegisterCount, out bytes, responseTimeout: responseTimeout);
                     if (result.IsSuccess)
                     {
-                        register.Value = uintValues[0].ToString();
+                        register.Value = register.GetValue(bytes, 0);
                     }
                     break;
                 case RegisterType.线圈:
@@ -1045,7 +1046,7 @@ namespace WYW.Communication
         #endregion
 
         #region 私有函数
-        private ExecutionResult SendCommand(int slaveID, ModbusCommand cmd, byte[] content, int maxSendCount = 1, int responseTimeout = 300)
+        private ExecutionResult SendCommand(int slaveID, ModbusCommand cmd, byte[] content,bool isNeedResponse=true,  int maxSendCount = 1, int responseTimeout = 300)
         {
             if (!IsConnected)
             {
@@ -1060,7 +1061,7 @@ namespace WYW.Communication
             {
                 obj = new ModbusTCP((byte)slaveID, cmd, content);
             }
-            var result = SendProtocol(obj, true, maxSendCount, responseTimeout);
+            var result = SendProtocol(obj, isNeedResponse, maxSendCount, responseTimeout);
             if (result.IsSuccess && result.Response != null)
             {
                 // 报错
@@ -1084,11 +1085,19 @@ namespace WYW.Communication
                             break;
                         case 0x04:
                             result.IsSuccess = false;
-                            result.ErrorMessage = "数据长度错误";
+                            result.ErrorMessage = "从设备故障";
+                            break;
+                        case 0x06:
+                            result.IsSuccess = false;
+                            result.ErrorMessage = "从设备忙";
                             break;
                         case 0x08:
                             result.IsSuccess = false;
-                            result.ErrorMessage = "主控口错误";
+                            result.ErrorMessage = "存储器奇偶性差错";
+                            break;
+                        case 0x0B:
+                            result.IsSuccess = false;
+                            result.ErrorMessage = "网关目标设备未响应";
                             break;
                         case 0x20:
                             result.IsSuccess = false;

@@ -153,10 +153,10 @@ namespace WYW.RS232SOCKET.Models
     class UDPClientConfig : ObservableObject
     {
         private string localIP;
-        private int localPort = 502;
+        private int localPort = 8899;
 
-        private string broadcastAddress;
-        private int broadcastPort;
+        private string broadcastAddress="255.255.255.255";
+        private int broadcastPort=502;
         private int receiveBufferSize = 4096;
         /// <summary>
         /// 广播地址
@@ -221,6 +221,13 @@ namespace WYW.RS232SOCKET.Models
         /// </summary>
         public byte TerminationCharacter { get => terminationCharacter; set => SetProperty(ref terminationCharacter, value); }
 
+
+        private int receiveTimeout=10;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int ReceiveTimeout { get => receiveTimeout; set => SetProperty(ref receiveTimeout, value); }
 
 
     }
