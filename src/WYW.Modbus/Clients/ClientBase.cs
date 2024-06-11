@@ -24,6 +24,8 @@ namespace WYW.Modbus.Clients
         public abstract bool Write(byte[] buffer);
         public abstract bool Read(ref List<byte> receiveBuffer);
 
+        public abstract void ClearReceiveBuffer();
+
         #endregion
     }
 }

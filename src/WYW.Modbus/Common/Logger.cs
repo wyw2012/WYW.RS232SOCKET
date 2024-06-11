@@ -89,14 +89,13 @@ namespace WYW.Modbus
             Folder = folder;
             timer = new System.Timers.Timer(3000) { Enabled = true, AutoReset = false };
             timer.Elapsed += Timer_Elapsed;
-
+            timer.Start();
         }
 
         private string Folder { get; }
         private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             Write();
-            timer.Stop();
         }
 
         /// <summary>
@@ -122,11 +121,6 @@ namespace WYW.Modbus
             {
                 Write();
             }
-            else
-            {
-                timer.Start();
-            }
-
         }
 
 
@@ -136,6 +130,10 @@ namespace WYW.Modbus
         /// <param name="folder"></param>
         private void Write()
         {
+            if (sb.Length == 0)
+            {
+                return;
+            }
             ThreadPool.QueueUserWorkItem(delegate
             {
                 try
@@ -143,6 +141,7 @@ namespace WYW.Modbus
                     var filePath = Path.Combine(Folder, GetFileName(Folder));
                     lock (locker)
                     {
+
                         using (var sw = new StreamWriter(filePath, true, Encoding.Default))
                         {
                             sw.Write(sb.ToString());

@@ -142,16 +142,16 @@ namespace WYW.Modbus
         private void StartHeartbeat()
         {
             isKeepHeartbeatTheadAlive = true;
-            var heartbeatContent = Heartbeat.Content;
-            if (heartbeatContent == null)
-            {
-                IsConnected = Client.IsEstablished;
-                return;
-            }
+            //var heartbeatContent = Heartbeat.Content;
+            //if (heartbeatContent == null)
+            //{
+            //    IsConnected = Client.IsEstablished;
+            //    return;
+            //}
             while (isKeepHeartbeatTheadAlive)
             {
                 Thread.Sleep(200);
-                if (!Heartbeat.IsEnabled)
+                if (!Heartbeat.IsEnabled || Heartbeat.Content==null)
                 {
                     IsConnected = Client.IsEstablished;
                     continue;
@@ -163,8 +163,8 @@ namespace WYW.Modbus
                 }
                 if ((DateTime.Now - lastReceiveTime).TotalSeconds >= Heartbeat.IntervalSeconds)
                 {
-                    heartbeatContent.CreateTime = DateTime.Now;
-                    var result = SendProtocol(heartbeatContent, true, Heartbeat.MaxRetryCount, Heartbeat.Timeout);
+                    Heartbeat.Content.CreateTime = DateTime.Now;
+                    var result = SendProtocol(Heartbeat.Content, true, Heartbeat.MaxRetryCount, Heartbeat.Timeout);
                     IsConnected = result.IsSuccess;
                     OnHeartbeatTriggered(result);
                 }

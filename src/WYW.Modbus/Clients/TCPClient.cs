@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.IO.Ports;
 
 namespace WYW.Modbus.Clients
 {
@@ -80,7 +81,28 @@ namespace WYW.Modbus.Clients
             isKeepThreadAlive = false;
             clientSocket?.Close();
         }
-
+        public override void ClearReceiveBuffer()
+        {
+            if(clientSocket!=null)
+            {
+                if (!IsEstablished)
+                {
+                    return ;
+                }
+                try
+                {
+                    if (clientSocket.Poll(0, SelectMode.SelectRead))
+                    {
+                        clientSocket.Receive(inBuffer, inBuffer.Length, SocketFlags.None);
+                    }
+                }
+                catch 
+                {
+                    IsEstablished = false;
+                }
+             
+            }
+        }
         public override bool Write(byte[] buffer)
         {
             if (!IsEstablished)

@@ -431,7 +431,7 @@ namespace WYW.Modbus
                         }
                         break;
                 }
-                Thread.Sleep(10);
+                Thread.Sleep(1);
             }
 
             return false;
@@ -507,12 +507,13 @@ namespace WYW.Modbus
                 DateTime startTime = DateTime.Now;
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{obj.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
+                    Logger.WriteLine(GetLogFolder(), $"[{startTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
                 }
                 if (IsPrintDebugInfo)
                 {
                     Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
                 }
+                //Client.ClearReceiveBuffer();
                 Client.Write(obj.FullBytes);
                 if (!isNeedResponse)
                 {
@@ -536,47 +537,48 @@ namespace WYW.Modbus
             }
             if (responseReceived)
             {
+                var responseObject = response.Last();
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{response[0].CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {response[0].FriendlyText}");
+                    Logger.WriteLine(GetLogFolder(), $"[{responseObject.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText}");
                 }
                 if (IsPrintDebugInfo)
                 {
-                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Rx] {response[0].FriendlyText} ");
+                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText} ");
                 }
                 lastReceiveTime = DateTime.Now;
                 IsConnected = true;
                 // 报错
-                if (response[0].Content.Length == 1)
+                if (responseObject.Content.Length == 1)
                 {
                     // 报错码
-                    switch (response[0].Content[0])
+                    switch (responseObject.Content[0])
                     {
                         case 0x01:
-                            return ExecutionResult.Failed("功能码不支持", response[0]);
+                            return ExecutionResult.Failed("功能码不支持", responseObject);
                         case 0x02:
-                            return ExecutionResult.Failed("数据地址不合法", response[0]);
+                            return ExecutionResult.Failed("数据地址不合法", responseObject);
                         case 0x03:
-                            return ExecutionResult.Failed("数据不合法", response[0]);
+                            return ExecutionResult.Failed("数据不合法", responseObject);
                         case 0x04:
-                            return ExecutionResult.Failed("从设备故障", response[0]);
+                            return ExecutionResult.Failed("从设备故障", responseObject);
                         case 0x06:
-                            return ExecutionResult.Failed("从设备忙", response[0]);
+                            return ExecutionResult.Failed("从设备忙", responseObject);
                         case 0x08:
-                            return ExecutionResult.Failed("存储器奇偶性差错", response[0]);
+                            return ExecutionResult.Failed("存储器奇偶性差错", responseObject);
                         case 0x0B:
-                            return ExecutionResult.Failed("网关目标设备未响应", response[0]);
+                            return ExecutionResult.Failed("网关目标设备未响应", responseObject);
                         case 0x20:
-                            return ExecutionResult.Failed("保护报警", response[0]);
+                            return ExecutionResult.Failed("保护报警", responseObject);
                         case 0x40:
-                            return ExecutionResult.Failed("CRC校验错误", response[0]);
+                            return ExecutionResult.Failed("CRC校验错误", responseObject);
                         default:
-                            return ExecutionResult.Failed($"Modbus错误，错误码：0x{response[0].Content[0].ToString("X2")}", response[0]);
+                            return ExecutionResult.Failed($"Modbus错误，错误码：0x{responseObject.Content[0].ToString("X2")}", responseObject);
                     }
                 }
                 else
                 {
-                    return ExecutionResult.Success(response[0]);
+                    return ExecutionResult.Success(responseObject);
                 }
             }
             else

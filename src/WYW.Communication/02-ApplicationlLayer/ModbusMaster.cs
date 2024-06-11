@@ -614,7 +614,7 @@ namespace WYW.Communication
                         }
                         break;
                 }
-                Thread.Sleep(10);
+                Thread.Sleep(1);
             }
 
             return false;

@@ -28,6 +28,10 @@ namespace WYW.Modbus.Clients
             serialPort.Close();
             IsEstablished = IsOpen = false;
         }
+        public override void ClearReceiveBuffer()
+        {
+            serialPort?.DiscardInBuffer();
+        }
         public override bool Read(ref List<byte> receiveBuffer)
         {
             if (!serialPort.IsOpen)

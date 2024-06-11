@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using WYW.Modbus.Clients;
 using WYW.Modbus.Protocols;
@@ -45,7 +46,7 @@ namespace WYW.Modbus
                 DateTime startTime = DateTime.Now;
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{obj.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
+                    Logger.WriteLine(GetLogFolder(), $"[{startTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
                 }
                 if (IsPrintDebugInfo)
                 {
@@ -81,17 +82,18 @@ namespace WYW.Modbus
             }
             if (responseReceived)
             {
+                var responseObject = response.Last();
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{response[0].CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {response[0].FriendlyText}");
+                    Logger.WriteLine(GetLogFolder(), $"[{responseObject.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText}");
                 }
                 if (IsPrintDebugInfo)
                 {
-                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Rx] {response[0].FriendlyText} ");
+                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText} ");
                 }
                 lastReceiveTime = DateTime.Now;
                 IsConnected = true;
-                return ExecutionResult.Success(response[0]);
+                return ExecutionResult.Success(responseObject);
             }
             else
             {

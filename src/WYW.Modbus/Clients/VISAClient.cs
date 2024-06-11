@@ -3,6 +3,7 @@ using NationalInstruments.Visa;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -69,15 +70,7 @@ namespace WYW.Modbus.Clients
                                 mbSession.TerminationCharacter = TerminationCharacter;
                                 mbSession.TerminationCharacterEnabled = true;
                                 mbSession.Clear();
-                                // 清空IO缓存，没有其它方式，只能通过读取方法清空
-                                try
-                                {
-                                    mbSession.RawIO.Read();
-                                }
-                                catch (Exception ex)
-                                {
-                                }
-
+                                ClearReceiveBuffer();
                                 IsEstablished = true;
                             }
 
@@ -91,7 +84,17 @@ namespace WYW.Modbus.Clients
                 }
             });
         }
-
+        public override void ClearReceiveBuffer()
+        {
+            // 清空IO缓存，没有其它方式，只能通过读取方法清空
+            try
+            {
+                mbSession.RawIO.Read();
+            }
+            catch (Exception ex)
+            {
+            }       
+        }
         public override bool Read(ref List<byte> receiveBuffer)
         {
             if (mbSession == null)
