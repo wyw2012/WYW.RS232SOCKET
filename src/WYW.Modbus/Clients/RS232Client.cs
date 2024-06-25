@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO.Ports;
 
 namespace WYW.Modbus.Clients
@@ -56,8 +57,19 @@ namespace WYW.Modbus.Clients
                 ErrorMessage = "串口未打开，请先调用Open方法";
                 return false;
             }
-            serialPort.Write(buffer, 0, buffer.Length);
-            return true;
+            lock(this)
+            {
+                try
+                {
+                    serialPort.Write(buffer, 0, buffer.Length);
+                }
+                catch(Exception ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return false;
+                }
+                return true;
+            }
         }
     }
 }
