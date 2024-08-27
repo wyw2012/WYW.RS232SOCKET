@@ -137,6 +137,7 @@ namespace WYW.Modbus.Clients
                     if (receivedCount > 0) //如果接收的消息为空 阻塞当前循环  
                     {
                         receiveBuffer.AddRange(inBuffer.Take(receivedCount));
+                        return true;
                     }
                 }
             }
@@ -144,7 +145,7 @@ namespace WYW.Modbus.Clients
             {
                 IsEstablished = false;
             }
-            return true;
+            return false;
         }
 
         #endregion

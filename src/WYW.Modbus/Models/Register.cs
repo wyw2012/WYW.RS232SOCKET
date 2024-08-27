@@ -44,6 +44,7 @@ namespace WYW.Modbus
         private string unit;
         private int registerCount = 1;
         private OperationType operationType= OperationType.Read;
+ 
         /// <summary>
         /// 地址
         /// </summary>
@@ -59,7 +60,14 @@ namespace WYW.Modbus
         public string Value
         {
             get => _value;
-            set => SetProperty(ref _value, value);
+            set
+            {
+                SetProperty(ref _value, value);
+                if (valueType == RegisterValueType.UTF8)
+                {
+                    RegisterCount = (Encoding.UTF8.GetBytes(Value ?? "").Length + 1) / 2;
+                }
+            }
         }
 
         /// <summary>
@@ -284,7 +292,6 @@ namespace WYW.Modbus
             }
             return "0";
         }
-
         #endregion
 
         #region 静态方法
@@ -658,7 +665,7 @@ namespace WYW.Modbus
 
         }
 
-        public static ExecutionResult ReadOrWriteOne(ModbusMaster device, int slaveID, Register register, int responseTimeout = 300)
+        public static ExecutionResult ReadOrWriteRegister(ModbusMaster device, int slaveID, Register register, int responseTimeout = 300)
         {
             byte[] bytes;
             bool[] boolValues;

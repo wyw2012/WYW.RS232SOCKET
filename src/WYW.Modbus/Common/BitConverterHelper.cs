@@ -4,11 +4,11 @@ using System.Linq;
 namespace WYW.Modbus
 {
     /// <summary>
-    /// 字节转换器辅助类，支持大端转换、小端转换
+    /// 字节转换器辅助类，支持大端转换、小端转换，默认大端
     /// </summary>
     public class BitConverterHelper
     {
-        public static byte[] GetBytes(char value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(char value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -19,7 +19,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(bool value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(bool value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -30,7 +30,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(short value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(short value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -41,7 +41,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(ushort value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(ushort value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -52,7 +52,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(int value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(int value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -63,7 +63,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(uint value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(uint value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -74,7 +74,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(long value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(long value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -85,7 +85,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(ulong value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(ulong value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -96,7 +96,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(float value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(float value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -107,7 +107,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static byte[] GetBytes(double value, EndianType endianType = EndianType.LittleEndian)
+        public static byte[] GetBytes(double value, EndianType endianType = EndianType.BigEndian)
         {
             switch (endianType)
             {
@@ -118,7 +118,7 @@ namespace WYW.Modbus
             }
             return new byte[0];
         }
-        public static short ToInt16(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static short ToInt16(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 2)
             {
@@ -134,20 +134,20 @@ namespace WYW.Modbus
             return 0;
         }
 
-        public static ushort[] ToUInt16Array(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static ushort[] ToUInt16Array(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
-            int length=value.Length - startIndex;
-            if (length<2 || length%2==1)
+            int length = value.Length - startIndex;
+            if (length < 2 || length % 2 == 1)
             {
                 throw new ArgumentException();
             }
-            ushort[] result=new ushort[length/2];
+            ushort[] result = new ushort[length / 2];
             switch (endianType)
             {
                 case EndianType.BigEndian:
-                    for (int i=0; i<result.Length;i++)
+                    for (int i = 0; i < result.Length; i++)
                     {
-                        result[i]= BitConverter.ToUInt16(value.SubBytes(startIndex+i*2, 2).Reverse().ToArray(), 0);
+                        result[i] = BitConverter.ToUInt16(value.SubBytes(startIndex + i * 2, 2).Reverse().ToArray(), 0);
                     }
                     break;
                 case EndianType.LittleEndian:
@@ -159,7 +159,7 @@ namespace WYW.Modbus
             }
             return result;
         }
-        public static ushort ToUInt16(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static ushort ToUInt16(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 2)
             {
@@ -173,7 +173,8 @@ namespace WYW.Modbus
                     return BitConverter.ToUInt16(value.ToArray(), startIndex);
             }
             return 0;
-        }        public static int ToInt32(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        }
+        public static int ToInt32(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 4)
             {
@@ -188,7 +189,7 @@ namespace WYW.Modbus
             }
             return 0;
         }
-        public static uint ToUInt32(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static uint ToUInt32(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 4)
             {
@@ -203,7 +204,7 @@ namespace WYW.Modbus
             }
             return 0;
         }
-        public static long ToInt64(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static long ToInt64(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 8)
             {
@@ -218,7 +219,7 @@ namespace WYW.Modbus
             }
             return 0;
         }
-        public static ulong ToUInt64(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static ulong ToUInt64(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 8)
             {
@@ -233,7 +234,7 @@ namespace WYW.Modbus
             }
             return 0;
         }
-        public static float ToSingle(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static float ToSingle(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 4)
             {
@@ -248,7 +249,7 @@ namespace WYW.Modbus
             }
             return 0;
         }
-        public static double ToDouble(byte[] value, int startIndex = 0, EndianType endianType = EndianType.LittleEndian)
+        public static double ToDouble(byte[] value, int startIndex = 0, EndianType endianType = EndianType.BigEndian)
         {
             if (value.Length < startIndex + 8)
             {

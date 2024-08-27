@@ -44,7 +44,7 @@ namespace WYW.Communication.Models
         private string description;
         private string unit;
         private int registerCount = 1;
-        private OperationType operationType= OperationType.Read;
+        private OperationType operationType = OperationType.Read;
         /// <summary>
         /// 地址
         /// </summary>
@@ -165,7 +165,7 @@ namespace WYW.Communication.Models
                 }
             }
         }
- 
+
         /// <summary>
         /// 描述
         /// </summary>
@@ -199,9 +199,9 @@ namespace WYW.Communication.Models
         /// <returns></returns>
         public byte[] GetBytes()
         {
-            if(string.IsNullOrEmpty(Value))
+            if (string.IsNullOrEmpty(Value))
             {
-                return new byte[RegisterCount*2];
+                return new byte[RegisterCount * 2];
             }
             try
             {
@@ -240,7 +240,7 @@ namespace WYW.Communication.Models
                         }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
             }
@@ -293,7 +293,7 @@ namespace WYW.Communication.Models
         /// <exception cref="Exception"></exception>
         public static void ValicateAddress(IEnumerable<Register> registers)
         {
-            var registersArray = registers.GroupBy(x=>x.RegisterType); // 按寄存器类型分组
+            var registersArray = registers.GroupBy(x => x.RegisterType); // 按寄存器类型分组
             foreach (var reg in registersArray)
             {
                 var repeatArray = reg.GroupBy(x => x.Address).Where(x => x.Count() > 1).Select(x => x.Key);
@@ -310,14 +310,14 @@ namespace WYW.Communication.Models
                     }
                 }
             }
-         
+
         }
         public static void ValicateValue(IEnumerable<Register> registers)
         {
             var items = registers.Where(x => x.WriteType != RegisterWriteType.只读);
             foreach (var register in items)
             {
-                if(register.RegisterType== RegisterType.线圈)
+                if (register.RegisterType == RegisterType.线圈)
                 {
                     switch (register.Value.ToLower())
                     {
@@ -338,8 +338,8 @@ namespace WYW.Communication.Models
                             throw new Exception($"地址为{register.Address}的值错误，该值必须是“0、1、ON、OFF、True、False、T、F”中的一种，不区分大小写。");
                     }
                 }
-         
-                if(register.ValueType!= RegisterValueType.UTF8)
+
+                if (register.ValueType != RegisterValueType.UTF8)
                 {
                     //if (register.OperationType == OperationType.Write)
                     //{
@@ -384,7 +384,7 @@ namespace WYW.Communication.Models
                 registers[i].EndianType = (RegisterEndianType)Enum.Parse(typeof(RegisterEndianType), table.Rows[i][5].ToString());
                 if (!ignoreValue)
                 {
-                    registers[i].Value =  table.Rows[i][6]?.ToString();
+                    registers[i].Value = table.Rows[i][6]?.ToString();
                 }
                 registers[i].Unit = table.Rows[i][7]?.ToString();
                 registers[i].Description = table.Rows[i][8]?.ToString();

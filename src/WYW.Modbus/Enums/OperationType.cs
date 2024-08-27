@@ -8,7 +8,7 @@ namespace WYW.Modbus
 {
     public enum OperationType
     {
-        Write,
-        Read,
+        Read = 0,
+        Write = 1,
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog.Debugging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,6 +12,7 @@ namespace WYW.Modbus
 {
     public class Device : DeviceBase
     {
+        private Stopwatch stopwatch;
         public Device(ClientBase client, ProtocolType protocol) : base(client, protocol)
         {
         }
@@ -40,18 +42,22 @@ namespace WYW.Modbus
             var receiveBuffer = new List<byte>();
             List<ProtocolBase> response = null;
             bool responseReceived = false;
-            bool result=false;
+            bool result = false;
             for (int i = 0; i < maxSendCount; i++)
             {
                 DateTime startTime = DateTime.Now;
+                var sendLog = $"[{startTime:HH:mm:ss.fff}] [Tx] {obj.FriendlyText}";
+                LastCommandText[0] = sendLog;
+                LastCommandText[1] = "";
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{startTime:yyyy-MM-dd HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
+                    Logger.Debug(sendLog);
                 }
                 if (IsPrintDebugInfo)
                 {
-                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Tx] {obj.FriendlyText}");
+                    Debug.WriteLine(sendLog);
                 }
+                stopwatch = Stopwatch.StartNew();
                 result = Client.Write(obj.FullBytes);
                 if (!result)
                 {
@@ -61,8 +67,12 @@ namespace WYW.Modbus
                 {
                     return ExecutionResult.Success(null);
                 }
-                while ((DateTime.Now - startTime).TotalMilliseconds < responseTimeout)
+                while (stopwatch.ElapsedMilliseconds < responseTimeout)
                 {
+                    if (!IsHighAccuracyTimer)
+                    {
+                        Thread.Sleep(1);
+                    }
                     result = Client.Read(ref receiveBuffer);
                     if (result)
                     {
@@ -73,7 +83,6 @@ namespace WYW.Modbus
                             break;
                         }
                     }
-                    Thread.Sleep(1);
                 }
                 if (responseReceived)
                 {
@@ -83,13 +92,15 @@ namespace WYW.Modbus
             if (responseReceived)
             {
                 var responseObject = response.Last();
+                var receiveLog = $"[{responseObject.CreateTime:HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText}";
+                LastCommandText[1] = receiveLog;
                 if (LogEnabled)
                 {
-                    Logger.WriteLine(GetLogFolder(), $"[{responseObject.CreateTime:yyyy-MM-dd HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText}");
+                    Logger.Debug(receiveLog);
                 }
                 if (IsPrintDebugInfo)
                 {
-                    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText} ");
+                    Debug.WriteLine(receiveLog);
                 }
                 lastReceiveTime = DateTime.Now;
                 IsConnected = true;

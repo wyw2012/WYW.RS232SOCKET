@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Serilog.Events;
+using Serilog;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using WYW.Modbus.Clients;
 using WYW.Modbus.Protocols;
+using Serilog.Core;
 
 namespace WYW.Modbus
 {
@@ -16,7 +19,7 @@ namespace WYW.Modbus
 
         public DeviceBase()
         {
-            
+
         }
         public DeviceBase(ClientBase client, ProtocolType protocol)
         {
@@ -93,7 +96,28 @@ namespace WYW.Modbus
         /// </summary>
         public bool IsDebugMode { get => isDebugMode; set => SetProperty(ref isDebugMode, value); }
 
+        /// <summary>
+        ///最后一次发送指令的内容
+        /// </summary>
+        public string[] LastCommandText { get; protected set; } = new string[2];
 
+        private Logger logger;
+
+        public Logger Logger 
+        {
+            get 
+            { 
+                if (logger == null)
+                {
+                    logger = GetLogger();
+                }
+                return logger; 
+            }
+        }
+        /// <summary>
+        /// 是否是高精度时钟模式
+        /// </summary>
+        public bool IsHighAccuracyTimer { get; set; }
         #endregion
 
         #region 公共方法
@@ -108,12 +132,11 @@ namespace WYW.Modbus
             {
                 IsConnected = true;
             }
-          
-
         }
         public virtual void Close()
         {
             Client?.Close();
+            logger?.Dispose();
         }
         #endregion
 
@@ -181,6 +204,27 @@ namespace WYW.Modbus
             {
                 return LogFolder;
             }
+        }
+
+        private Logger GetLogger()
+        {
+            // 初始化日志库
+            // 1 按天存储
+            // 2 每个文件限制10M
+            // 3 最多保存60天的日志
+            string logFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", GetLogFolder());
+            TimeSpan keepLogTime = new TimeSpan(60, 0, 0, 0);
+            string serilogOutputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] {Message:lj}{NewLine}{Exception}";
+            return new LoggerConfiguration()
+                                     .MinimumLevel.Debug()
+                                     .WriteTo.Logger(lg => lg.Filter.ByIncludingOnly(p => p.Level == LogEventLevel.Debug).WriteTo.File($"{logFolder}\\.txt", retainedFileCountLimit: null, retainedFileTimeLimit: keepLogTime, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, rollingInterval: RollingInterval.Day, outputTemplate: serilogOutputTemplate))
+                                     .WriteTo.Logger(lg => lg.Filter.ByIncludingOnly(p => p.Level == LogEventLevel.Information).WriteTo.File($"{logFolder}\\Information\\.txt", retainedFileCountLimit: null, retainedFileTimeLimit: keepLogTime, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, rollingInterval: RollingInterval.Day, outputTemplate: serilogOutputTemplate))
+                                     .WriteTo.Logger(lg => lg.Filter.ByIncludingOnly(p => p.Level == LogEventLevel.Warning).WriteTo.File($"{logFolder}\\Warning\\.txt", retainedFileCountLimit: null, retainedFileTimeLimit: keepLogTime, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, rollingInterval: RollingInterval.Day, outputTemplate: serilogOutputTemplate))
+                                     .WriteTo.Logger(lg => lg.Filter.ByIncludingOnly(p => p.Level == LogEventLevel.Error).WriteTo.File($"{logFolder}\\Error\\.txt", retainedFileCountLimit: null, retainedFileTimeLimit: keepLogTime, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, rollingInterval: RollingInterval.Day, outputTemplate: serilogOutputTemplate))
+                                     .WriteTo.Logger(lg => lg.Filter.ByIncludingOnly(p => p.Level == LogEventLevel.Fatal).WriteTo.File($"{logFolder}\\Fatal\\.txt", retainedFileCountLimit: null, retainedFileTimeLimit: keepLogTime, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, rollingInterval: RollingInterval.Day, outputTemplate: serilogOutputTemplate))
+                                     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                                     .Enrich.FromLogContext()
+                                     .CreateLogger();
         }
         #endregion
     }

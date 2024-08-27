@@ -9,7 +9,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace WYW.Communication
 {
@@ -18,15 +17,7 @@ namespace WYW.Communication
     /// </summary>
     public static class ExtensionMethod
     {
-        /// <summary>
-        /// 将字节数组转换成十六进制显示的字符串
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static string ToHexString(this IEnumerable<byte> source)
-        {
-            return string.Join(" ", source.Select(x => x.ToString("X2")));
-        }
+        #region String转换
         /// <summary>
         /// 十六进制字符串转换成字节数组
         /// </summary>
@@ -39,7 +30,7 @@ namespace WYW.Communication
             var chars = Regex.Replace(text, @"\s", ""); // 剔除空格
             if (chars.Length % 2 == 1)
             {
-                throw new ArgumentException($"字符串长度需要是偶数");
+                throw new ArgumentException($"The length of string must been even");
             }
             var hexs = Regex.Split(chars, @"(?<=\G.{2})(?!$)");   // 两两分组
             try
@@ -48,97 +39,44 @@ namespace WYW.Communication
             }
             catch
             {
-                throw new ArgumentException($"字符串无法转换成十六进制");
+                throw new ArgumentException($"The string cannot be converted to hexadecimal");
             }
             return result.ToArray();
         }
-        /// <summary>
-        /// 将字节数组转换成UTF-8格式的字符串
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static string ToASCII(this byte[] source)
+        public static double[] ToDoubleArray(this string text, char splitChar = ',')
         {
-            return Encoding.ASCII.GetString(source);
-        }
-        /// <summary>
-        /// 将字节数组转换成UTF-8格式的字符串
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static string ToUTF8(this byte[] source)
-        {
-            return Encoding.UTF8.GetString(source);
+            if (splitChar != '\n' && splitChar != '\r' && splitChar != '\t' && splitChar != '\f' && splitChar != ' ')
+            {
+                text = Regex.Replace(text, "\\s", "");
+            }
+            return text.Split(splitChar).Select(x => double.Parse(x)).ToArray();
         }
 
-        /// <summary>
-        /// 将字节数组转换成UTF-8格式的字符串
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="startIndex">起始地址</param>
-        /// <param name="length">字节长度</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static string ToUTF8(this byte[] source, int startIndex, int length)
+        public static bool TryToDoubleArray(this string text, out double[] result, char splitChar = ',')
         {
-            if (startIndex + length > source.Length)
+            result = new double[0];
+            if (splitChar != '\n' && splitChar != '\r' && splitChar != '\t' && splitChar != '\f' && splitChar != ' ')
             {
-                throw new ArgumentException("参数错误，起始索引与长度之和大于字节数组长度");
+                text = Regex.Replace(text, "\\s", "");
             }
-            return Encoding.UTF8.GetString(source, startIndex, length);
+            try
+            {
+                text.Split(splitChar).Select(x => double.Parse(x)).ToArray();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
-        public static byte[] SubBytes(this byte[] source, int startIndex, int length)
+
+        public static int[] ToInt32Array(this string text, char splitChar = ',')
         {
-            if (startIndex + length > source.Length)
+            if (splitChar != '\n' && splitChar != '\r' && splitChar != '\t' && splitChar != '\f' && splitChar != ' ')
             {
-                throw new ArgumentException("参数错误，起始索引与长度之和大于字节数组长度");
+                text = Regex.Replace(text, "\\s", "");
             }
-            var result = new byte[length];
-            Array.Copy(source, startIndex, result, 0, length);
-            return result;
-        }
-        /// <summary>
-        /// 获取枚举的DescriptionAttribute标记内容
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static string GetDescription(this Enum source)
-        {
-            var field = source.GetType().GetField(source.ToString());
-            var customAttribute = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));
-            return customAttribute == null ? source.ToString() : ((DescriptionAttribute)customAttribute).Description;
-        }
-        //从给定的枚举类型Type中，通过枚举描述找到对应的枚举值，
-        public static Enum GetEnumByDescription<T>(this string description)
-        {
-            if (string.IsNullOrEmpty(description))
-            {
-                return null;
-            }
-            Array values = Enum.GetValues(typeof(T));
-            foreach (Enum item in values)
-            {
-                if (description == item.ToString())
-                {
-                    return item;
-                }
-                else if(description == GetDescription(item))
-                {
-                    return item;
-                }
-            }
-            return null;
-        }
-        public static string GetMD5(this byte[] source)
-        {
-            MD5 md5 = new MD5CryptoServiceProvider();
-            byte[] data = md5.ComputeHash(source);
-            var sb = new StringBuilder();
-            for (var i = 0; i < data.Length; i++)
-            {
-                sb.Append(data[i].ToString("X2"));
-            }
-            return sb.ToString();
+            return text.Split(splitChar).Select(x => int.Parse(x)).ToArray();
         }
         public static string GetMD5(this string source)
         {
@@ -175,7 +113,7 @@ namespace WYW.Communication
         /// <returns></returns>
         public static bool IsIPV4(this string ipAddress)
         {
-           return Regex.IsMatch(ipAddress, @"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+            return Regex.IsMatch(ipAddress, @"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
         }
         /// <summary>
         /// 每两个字符之间加入空格
@@ -186,32 +124,152 @@ namespace WYW.Communication
         {
             return string.Join(" ", Regex.Split(text, @"(?<=\G.{2})(?!$)"));
         }
-        public static bool ToDoubleArray(this string text, out double[] values,char splitChar=',')
+
+        //从给定的枚举类型Type中，通过枚举描述找到对应的枚举值，
+        public static Enum GetEnumByDescription<T>(this string description)
         {
-            List<byte> list = new List<byte>();
-            if(splitChar!='\n' && splitChar!='\r' && splitChar !='\t' && splitChar!='\f' && splitChar!=' ')
+            if (string.IsNullOrEmpty(description))
             {
-                 text = Regex.Replace(text, "\\s", "");
+                return null;
             }
-            try
+            Array values = Enum.GetValues(typeof(T));
+            foreach (Enum item in values)
             {
-                values = text.Split(splitChar).Select(x => double.Parse(x)).ToArray();
-                return true;
+                if (description == item.ToString())
+                {
+                    return item;
+                }
+                else if (description == GetDescription(item))
+                {
+                    return item;
+                }
             }
-            catch
-            {
-                values = new double[0];
-            }
-            return false;
+            return null;
         }
+        #endregion
+
+        #region Byte[]转换
+        /// <summary>
+        /// 将字节数组转换成UTF-8格式的字符串
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToASCII(this byte[] source)
+        {
+            return Encoding.ASCII.GetString(source);
+        }
+        /// <summary>
+        /// 将字节数组转换成UTF-8格式的字符串
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToUTF8(this byte[] source)
+        {
+            return Encoding.UTF8.GetString(source);
+        }
+        /// <summary>
+        /// 将字节数组转换成十六进制显示的字符串
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToHexString(this IEnumerable<byte> source)
+        {
+            return string.Join(" ", source.Select(x => x.ToString("X2")));
+        }
+        /// <summary>
+        /// 将字节数组转换成UTF-8格式的字符串
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="startIndex">起始地址</param>
+        /// <param name="length">字节长度</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string ToUTF8(this byte[] source, int startIndex, int length)
+        {
+            if (startIndex + length > source.Length)
+            {
+                throw new ArgumentException("The sum of the start index and length is greater than the length of the byte array.");
+            }
+            return Encoding.UTF8.GetString(source, startIndex, length);
+        }
+        public static byte[] SubBytes(this byte[] source, int startIndex, int length)
+        {
+            if (startIndex + length > source.Length)
+            {
+                throw new ArgumentException("The sum of the start index and length is greater than the length of the byte array.");
+            }
+            var result = new byte[length];
+            Array.Copy(source, startIndex, result, 0, length);
+            return result;
+        }
+        public static string GetMD5(this byte[] source)
+        {
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] data = md5.ComputeHash(source);
+            var sb = new StringBuilder();
+            for (var i = 0; i < data.Length; i++)
+            {
+                sb.Append(data[i].ToString("X2"));
+            }
+            return sb.ToString();
+        }
+        #endregion
+
+        #region Enum
+        /// <summary>
+        /// 获取枚举的DescriptionAttribute标记内容
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string GetDescription(this Enum source)
+        {
+            var field = source.GetType().GetField(source.ToString());
+            var customAttribute = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));
+            return customAttribute == null ? source.ToString() : ((DescriptionAttribute)customAttribute).Description;
+        }
+        #endregion
+
+        #region Bit Byte Int16 Int32 Int64 
+
         public static int GetBit(this UInt16 source, int index)
         {
             if (index > 15)
             {
-                throw new ArgumentException("索引不能大于15");
+                throw new ArgumentException("The index must been less than 15.");
             }
             return (source >> index) & 1;
         }
+
+        public static byte[] GetUInt16Bytes(this int value, EndianType endianType = EndianType.BigEndian)
+            => BitConverterHelper.GetBytes((ushort)value, endianType);
+        public static byte[] GetUInt32Bytes(this int value, EndianType endianType = EndianType.BigEndian)
+               => BitConverterHelper.GetBytes((uint)value, endianType);
+        public static byte[] GetFloatBytes(this double value, EndianType endianType = EndianType.BigEndian)
+          => BitConverterHelper.GetBytes((float)value, endianType);
+
+        public static ushort ToUInt16(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+            => BitConverterHelper.ToUInt16(data, startIndex, endianType);
+        public static short ToInt16(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+          => BitConverterHelper.ToInt16(data, startIndex, endianType);
+        public static uint ToUInt32(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+            => BitConverterHelper.ToUInt32(data, startIndex, endianType);
+        public static int ToInt32(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+          => BitConverterHelper.ToInt32(data, startIndex, endianType);
+        public static float ToSingle(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+            => BitConverterHelper.ToSingle(data, startIndex, endianType);
+        public static double ToDouble(this byte[] data, int startIndex, EndianType endianType = EndianType.BigEndian)
+          => BitConverterHelper.ToDouble(data, startIndex, endianType);
+
+        #endregion
+
+
+        #region Object
+        /// <summary>
+        /// 深度拷贝，类需要添加标记[Serializable]
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public static T DeepClone<T>(this T input)
         {
             using (var ms = new MemoryStream())
@@ -222,6 +280,7 @@ namespace WYW.Communication
                 return (T)formatter.Deserialize(ms);
             }
         }
+
 
         public static IEnumerable<T> DataTableToList<T>(this DataTable dataTable)
         {
@@ -241,6 +300,6 @@ namespace WYW.Communication
             }
             return list;
         }
-
+        #endregion
     }
 }
