@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 
 namespace WYW.Modbus.Protocols
 {
     class ModbusTCP : ModbusBase
     {
-
+        private bool isReceiveFrame;
         #region 子类必须实现的
         public ModbusTCP(byte slaveID, ModbusCommand cmd, byte[] content, UInt16 transactionID = 0)
         {
@@ -22,9 +23,30 @@ namespace WYW.Modbus.Protocols
             FullBytes = list.ToArray();
             FriendlyText = ToHexString();
             Content = content;
-            Tag = $"{slaveID:X2}{(byte)cmd:X2}"; // 节点ID+指令码
             SlaveID = slaveID;
             Command = cmd;
+            switch (Command)
+            {
+                case ModbusCommand.ReadMoreHoldingRegisters:
+                case ModbusCommand.ReadMoreInputResiters:
+                    // 节点ID+指令码+寄存器个数*2
+                    Tag = $"{SlaveID:X2}{(byte)Command:X2}{(BitConverterHelper.ToUInt16(Content, 2) * 2):X2}";
+                    break;
+                case ModbusCommand.WriteOneHoldingRegister:
+                case ModbusCommand.WriteOneCoil:
+                    // 节点ID+指令码+寄存器地址
+                    Tag = $"{SlaveID:X2}{(byte)Command:X2}{BitConverterHelper.ToUInt16(Content, 0):X2}";
+                    break;
+                case ModbusCommand.WriteMoreHoldingRegisters:
+                    // 节点ID+指令码+寄存器起始地址+寄存器个数
+                    Tag = $"{SlaveID:X2}{(byte)Command:X2}{(BitConverterHelper.ToUInt32(Content, 0)):X4}";
+                    break;
+                default:
+                    // 节点ID+指令码
+                    Tag = $"{SlaveID:X2}{(byte)Command:X2}";
+                    break;
+            };
+
         }
 
         /// <summary>
@@ -43,11 +65,36 @@ namespace WYW.Modbus.Protocols
             else
             {
                 Content = fullBytes.SubBytes(8, fullBytes.Length - 8);
-                Tag = $"{fullBytes[6]:X2}{fullBytes[7]:X2}"; // 节点ID+指令码
                 SlaveID = fullBytes[6];
                 Command = (ModbusCommand)fullBytes[7];
                 TransactionID = (UInt16)((fullBytes[0] << 8) + fullBytes[1]);
+                Tag = $"{SlaveID:X2}{(byte)Command:X2}"; // 节点ID+指令码;
+                switch (Command)
+                {
+                    case ModbusCommand.ReadMoreHoldingRegisters:
+                    case ModbusCommand.ReadMoreInputResiters:
+                        // 节点ID+指令码+字节长度
+                        Tag = $"{SlaveID:X2}{(byte)Command:X2}{Content[0]:X2}";
+                        break;
+                    case ModbusCommand.WriteOneHoldingRegister:
+                    case ModbusCommand.WriteOneCoil:
+                        // 节点ID+指令码+寄存器地址
+                        if(Content.Length>=2)
+                        {
+                            Tag = $"{SlaveID:X2}{(byte)Command:X2}{BitConverterHelper.ToUInt16(Content, 0):X2}";
+                        }
+                        break;
+                    case ModbusCommand.WriteMoreHoldingRegisters:
+                        // 节点ID+指令码+寄存器地址+寄存器个数
+                        if (Content.Length >= 4)
+                        {
+                            Tag = $"{SlaveID:X2}{(byte)Command:X2}{BitConverterHelper.ToUInt32(Content, 0):X4}";
+                        }
+                        break;
+
+                }
             }
+            isReceiveFrame = true;
         }
         #endregion
 
@@ -86,6 +133,5 @@ namespace WYW.Modbus.Protocols
 
 
         #endregion
-
     }
 }

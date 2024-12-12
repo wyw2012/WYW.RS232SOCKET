@@ -98,7 +98,11 @@ namespace WYW.Modbus.Clients
         public override bool Read(ref List<byte> receiveBuffer)
         {
             if (mbSession == null)
+            {
+                ErrorMessage = "设备未打开";
                 return false;
+            }
+               
             try
             {
                 mbSession.TimeoutMilliseconds = ReceiveTimeout;

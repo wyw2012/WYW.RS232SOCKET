@@ -37,5 +37,22 @@ namespace WYW.RS232SOCKET
         /// <returns></returns>
         [DllImport("kernel32.dll ")]
         public static extern bool QueryPerformanceFrequency(out long tick);
+
+        /// <summary>
+        /// 请求高精度计时器
+        /// </summary>
+        /// <param name="t">时间精度，单位ms</param>
+        /// <returns>0成功</returns>
+        [DllImport("winmm")]
+        public static extern int timeBeginPeriod(int t);
+
+        /// <summary>
+        /// 停止高精度计时器
+        /// </summary>
+        /// <param name="t">时间精度，单位ms</param>
+        /// <returns>0成功</returns>
+        [DllImport("winmm")]
+        public static extern uint timeEndPeriod(int t);
+
     }
 }

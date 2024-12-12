@@ -32,7 +32,7 @@ namespace WYW.RS232SOCKET.ViewModels
 
         #region 属性
         public DeviceController Controller { get; } = Ioc.Controller;
-        private int selectedIndex;
+        private int selectedIndex=-1;
 
         /// <summary>
         /// 
@@ -223,7 +223,18 @@ namespace WYW.RS232SOCKET.ViewModels
         private void Add()
         {
             MessageControl.Clear();
-            var parameter = new ModbusScriptModel() { ID = ScriptItems.Count == 0 ? 1 : ScriptItems.Max(x => x.ID) + 1 };
+            var item = ScriptItems.LastOrDefault();
+            var parameter = new ModbusScriptModel();
+            if (item == null)
+            {
+                parameter.ID = 1;
+                parameter.AddressChar = "0x01";
+            }
+            else
+            {
+                parameter.ID = item.ID + 1;
+                parameter.AddressChar = $"0x{item.Address + item.RegisterCount:X2}";
+            }
             ScriptItems.Add(parameter);
         }
 
@@ -239,8 +250,6 @@ namespace WYW.RS232SOCKET.ViewModels
             {
                 ScriptItems.RemoveAt(SelectedIndex);
             }
-            ScriptItems.RemoveAt(SelectedIndex);
-
         }
 
 

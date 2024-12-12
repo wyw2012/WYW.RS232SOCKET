@@ -46,9 +46,13 @@
                      wyw:TabItemElement.IcoGeometry="{StaticResource TestGeometry}">
                 <local:ModbusScript/>
             </TabItem>
-            <TabItem Header="编码转换" 
+            <TabItem Header="字符转换" 
                      wyw:TabItemElement.IcoGeometry="{StaticResource ConvertGeometry}">
                 <local:ProtocolConvertView/>
+            </TabItem>
+            <TabItem Header="数字转换" 
+             wyw:TabItemElement.IcoGeometry="{StaticResource DataGeometry}">
+                <local:NumberConvertView/>
             </TabItem>
             <TabItem Header="辅助工具" 
                      wyw:TabItemElement.IcoGeometry="{StaticResource UtilitiesGeometry}">

@@ -73,11 +73,19 @@ namespace WYW.Modbus
                     {
                         Thread.Sleep(1);
                     }
+                    else
+                    {
+                        // 大于15ms，让出CPU
+                        if (stopwatch.ElapsedMilliseconds % 15 == 14)
+                        {
+                            Thread.Sleep(1);
+                        }
+                    }
                     result = Client.Read(ref receiveBuffer);
                     if (result)
                     {
                         response = obj.GetResponse(receiveBuffer);
-                        if (response.Count >= 1)
+                        if (response.Any(x => x.IsMatch(obj)))
                         {
                             responseReceived = true;
                             break;
@@ -89,27 +97,32 @@ namespace WYW.Modbus
                     break;
                 }
             }
-            if (responseReceived)
+            if (responseReceived || (response != null && response.Count > 0))
             {
-                var responseObject = response.Last();
-                var receiveLog = $"[{responseObject.CreateTime:HH:mm:ss.fff}] [Rx] {responseObject.FriendlyText}";
-                LastCommandText[1] = receiveLog;
-                if (LogEnabled)
-                {
-                    Logger.Debug(receiveLog);
-                }
-                if (IsPrintDebugInfo)
-                {
-                    Debug.WriteLine(receiveLog);
-                }
                 lastReceiveTime = DateTime.Now;
                 IsConnected = true;
-                return ExecutionResult.Success(responseObject);
+                foreach (var item in response)
+                {
+                    var log = $"[{item.CreateTime:HH:mm:ss.fff}] [Rx] {item.FriendlyText}";
+                    if (LogEnabled)
+                    {
+                        Logger.Debug(log);
+                    }
+                    if (IsPrintDebugInfo)
+                    {
+                        Debug.WriteLine(log);
+                    }
+                    LastCommandText[1] = log;
+
+                    if (item.IsMatch(obj))
+                    {
+                        return ExecutionResult.Success(item);
+                    }
+                }
+
             }
-            else
-            {
-                return ExecutionResult.Failed(Properties.Message.CommunicationTimeout);
-            }
+            return ExecutionResult.Failed(Properties.Message.CommunicationTimeout);
+
         }
         private ProtocolBase GetObject(string cmd)
         {

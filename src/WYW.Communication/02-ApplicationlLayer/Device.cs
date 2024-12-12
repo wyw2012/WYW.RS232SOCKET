@@ -132,6 +132,11 @@ namespace WYW.Communication
         /// 最后一次接收到数据时间
         /// </summary>
         public DateTime LastReceiveTime { get; protected set; } = DateTime.MinValue;
+
+        /// <summary>
+        /// 是否是高精度时钟模式
+        /// </summary>
+        public bool IsHighAccuracyTimer { get; set; }
         #endregion
 
         #region 事件
@@ -377,7 +382,10 @@ namespace WYW.Communication
                     {
                         break;
                     }
-                    Thread.Sleep(1);
+                    if (!IsHighAccuracyTimer)
+                    {
+                        Thread.Sleep(1);
+                    }
                 }
                 if (arg.HasReceiveResponse)
                 {
@@ -432,7 +440,10 @@ namespace WYW.Communication
                                     {
                                         break;
                                     }
-                                    Thread.Sleep(1);
+                                    if (!IsHighAccuracyTimer)
+                                    {
+                                        Thread.Sleep(1);
+                                    }
                                 }
                                 if (cmd.HasReceiveResponse)
                                 {

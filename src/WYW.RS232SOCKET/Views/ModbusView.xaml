@@ -97,7 +97,7 @@
                                         SelectedItemBinding="{Binding RegisterType,UpdateSourceTrigger=PropertyChanged}" />
 
 
-                    <DataGridTextColumn Width="*" Header="地址" Binding="{Binding Address}">
+                    <DataGridTextColumn Width="*" Header="地址" Binding="{Binding AddressChar}">
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
                                 <Setter Property="ToolTip">

@@ -120,6 +120,9 @@
   <data name="ArrayLengthNotOdd" xml:space="preserve">
     <value>The length of the byte array cannot be odd.</value>
   </data>
+  <data name="CommunicationError" xml:space="preserve">
+    <value>The function codes for receiving and sending do not match. Maybe the communication is disturbed.</value>
+  </data>
   <data name="CommunicationTimeout" xml:space="preserve">
     <value>Communication timeout</value>
   </data>

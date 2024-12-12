@@ -79,6 +79,24 @@ namespace WYW.Modbus
             }
             return text.Split(splitChar).Select(x => int.Parse(x)).ToArray();
         }
+        public static bool TryToInt32Array(this string text, out Int32[] result, char splitChar = ',')
+        {
+            result = new Int32[0];
+            if (splitChar != '\n' && splitChar != '\r' && splitChar != '\t' && splitChar != '\f' && splitChar != ' ')
+            {
+                text = Regex.Replace(text, "\\s", "");
+            }
+            try
+            {
+                result = text.Split(splitChar).Select(x => Int32.Parse(x)).ToArray();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static string GetMD5(this string source)
         {
             var bytes = Encoding.UTF8.GetBytes(source);
@@ -263,6 +281,38 @@ namespace WYW.Modbus
 
         #endregion
 
+        #region Compare
+        public static bool IsEquals(this byte[] source, byte[] target)
+        {
+            if (source != null && target != null)
+            {
+                if (source.Length != target.Length)
+                {
+                    return false;
+                }
+                else
+                {
+                    for (int i = 0; i < source.Length; i++)
+                    {
+                        if (source[i] != target[i])
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+            else if (source == null && target == null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        #endregion
 
         #region Object
         /// <summary>

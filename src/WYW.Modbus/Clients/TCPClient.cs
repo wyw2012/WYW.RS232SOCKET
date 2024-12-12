@@ -8,6 +8,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.IO.Ports;
+using Serilog;
 
 namespace WYW.Modbus.Clients
 {
@@ -56,6 +57,7 @@ namespace WYW.Modbus.Clients
                             }
                             clientSocket.Connect(ipep);
                             IsEstablished = true;
+                            Logger?.Debug($"Socket establish success. RemoteEndPoint: {clientSocket.RemoteEndPoint}:{ipep.Port}. LocalEndPoint: {clientSocket.LocalEndPoint}");
                         }
                         // 目标主机未开启socket
                         catch (SocketException ex)
@@ -93,7 +95,8 @@ namespace WYW.Modbus.Clients
                 {
                     if (clientSocket.Poll(0, SelectMode.SelectRead))
                     {
-                        clientSocket.Receive(inBuffer, inBuffer.Length, SocketFlags.None);
+                        var buffer = new byte[2048];
+                        clientSocket.Receive(buffer, buffer.Length, SocketFlags.None);
                     }
                 }
                 catch 
@@ -114,8 +117,9 @@ namespace WYW.Modbus.Clients
             {
                 clientSocket.Send(buffer);
             }
-            catch
+            catch(Exception ex)
             {
+                Logger?.Debug($"Write failed. {ex.Message}");
                 IsEstablished = false;
                 return false;
             }
@@ -144,6 +148,7 @@ namespace WYW.Modbus.Clients
             catch (Exception ex)
             {
                 IsEstablished = false;
+                Logger?.Debug($"Read failed. {ex.Message}");
             }
             return false;
         }

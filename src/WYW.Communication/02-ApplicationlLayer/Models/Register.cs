@@ -18,16 +18,16 @@ namespace WYW.Communication.Models
         }
         public Register(int address)
         {
-            Address = address;
+            AddressChar = $"0x{address:X2}";
         }
         public Register(int address, int value)
         {
-            Address = address;
+            AddressChar = $"0x{address:X2}";
             Value = value.ToString();
         }
         public Register(int address, int value, RegisterType registerType)
         {
-            Address = address;
+            AddressChar = $"0x{address:X2}";
             Value = value.ToString();
             RegisterType = registerType;
         }
@@ -51,9 +51,40 @@ namespace WYW.Communication.Models
         public int Address
         {
             get => address;
-            set => SetProperty(ref address, value);
+            private set => SetProperty(ref address, value);
         }
 
+        private string addressChar;
+
+        /// <summary>
+        /// Address的字符形式
+        /// </summary>
+        public string AddressChar
+        {
+            get => addressChar;
+            set
+            {
+                SetProperty(ref addressChar, value);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    try
+                    {
+                        if (value.ToLower().StartsWith("0x"))
+                        {
+                            Address = Convert.ToInt32(value, 16);
+                        }
+                        else
+                        {
+                            Address = Convert.ToInt32(value, 10);
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                }
+            }
+        }
         /// <summary>
         /// 
         /// </summary>

@@ -92,7 +92,7 @@
                                         ItemsSource="{Binding Source={StaticResource RegisterTypeCollection} }" 
                                         EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
                                         SelectedItemBinding="{Binding RegisterType,UpdateSourceTrigger=PropertyChanged}" />
-                            <DataGridTextColumn Width="*" Header="地址" Binding="{Binding Address}">
+                            <DataGridTextColumn Width="*" Header="地址" Binding="{Binding AddressChar}">
                                 <DataGridTextColumn.CellStyle>
                                     <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}">
                                         <Setter Property="ToolTip">
@@ -145,7 +145,7 @@
                                         </Setter>
                                         <Setter Property="ToolTip">
                                             <Setter.Value>
-                                                <TextBlock Text="{Binding .,Converter={StaticResource RegiseterValueFormatConverter}}"/>
+                                                <TextBlock Text="{Binding ., Converter={StaticResource RegiseterValueFormatConverter}}"/>
                                             </Setter.Value>
                                         </Setter>
                                     </Style>

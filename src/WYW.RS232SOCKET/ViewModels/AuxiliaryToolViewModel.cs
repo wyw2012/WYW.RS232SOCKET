@@ -24,6 +24,8 @@ namespace WYW.RS232SOCKET.ViewModels
 
         private CancellationTokenSource tokenSource;
         private delegate void ProgressCallback(double progress);
+        private static bool isKeepThreadAlive = false;
+        private int threadCount;
         public AuxiliaryToolViewModel()
         {
             string hostName = Dns.GetHostName();
@@ -47,6 +49,14 @@ namespace WYW.RS232SOCKET.ViewModels
             StartScanPortCommand = new RelayCommand(StartScanPort);
             StartPingCommand = new RelayCommand(StartPing);
             StartScanIPCommand = new RelayCommand(StartScanIP);
+
+            NormalSleepCommand=new RelayCommand(NormalSleep);
+            HiggAccuracySleepCommand = new RelayCommand(HiggAccuracySleep);
+            CpuSleepCommand = new RelayCommand(CpuSleep);
+            MixedSleepCommand=new RelayCommand(MixedSleep);
+            AddThreadCommand= new RelayCommand(AddThread);
+            DisposeThreadCommand = new RelayCommand(DisposeThread);
+
 
         }
         public DeviceController Controller { get; } = Ioc.Controller;
@@ -490,6 +500,167 @@ namespace WYW.RS232SOCKET.ViewModels
                     Controller.Config.Status.ProgressBarVisibility = Visibility.Collapsed;
                 }
             });
+        }
+
+        #endregion
+
+        #region 休眠时间检测
+        private int sleepTime=15;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int SleepTime { get => sleepTime; set => SetProperty(ref sleepTime, value); }
+
+        private double offsetTime=1.5;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double OffsetTime { get => offsetTime; set => SetProperty(ref offsetTime, value); }
+
+        private int samplingCount=100;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int SamplingCount { get => samplingCount; set => SetProperty(ref samplingCount, value); }
+
+        private string threadInfo;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ThreadInfo { get => threadInfo; set => SetProperty(ref threadInfo, value); }
+
+        private int progress;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Progress { get => progress; set => SetProperty(ref progress, value); }
+
+        public RelayCommand NormalSleepCommand { get; set; }
+        public RelayCommand HiggAccuracySleepCommand { get; set; }
+        public RelayCommand CpuSleepCommand { get; set; }
+        public RelayCommand AddThreadCommand { get; set; }
+        public RelayCommand DisposeThreadCommand { get; set; }
+        public RelayCommand MixedSleepCommand { get; set; }
+        private void NormalSleep()
+        {
+            WinAPI.NtSetTimerResolution(5000, true, out _);
+            Stopwatch sw = Stopwatch.StartNew();
+            List<double> list = new List<double>();
+            Task.Run(() =>
+            {
+                IsRunning = true;
+                Progress = 0;
+                for (int i = 0; i < SamplingCount; i++)
+                {
+                    sw.Restart();
+                    Thread.Sleep(SleepTime);
+                    list.Add(sw.Elapsed.TotalMilliseconds);
+                    Progress = (i+1)*100 / SamplingCount;
+                }
+                IsRunning=false;
+                var errorList = list.Where(x => Math.Abs(x - SleepTime) > OffsetTime);
+                if(!errorList.Any())
+                {
+                    MessageBox.Success($"全部通过测试，平均耗时：{Math.Round(list.Average(),1)}ms");
+                }
+                else
+                {
+                    var top10 = errorList.OrderByDescending(x => x).Take(10).Select(x=>Math.Round(x,1));
+                    MessageBox.Error($"异常个数：{errorList.Count()}，平均耗时：{Math.Round(list.Average(), 1)}ms，前10个异常时间：{string.Join(",",top10)}");
+                }
+               
+            });
+        }
+        private void HiggAccuracySleep()
+        {
+            WinAPI.NtSetTimerResolution(5000, true, out _);
+            NormalSleep();
+            WinAPI.NtSetTimerResolution(0, true, out _);
+        }
+        private void CpuSleep()
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            List<double> list = new List<double>();
+            Task.Run(() =>
+            {
+                IsRunning = true;
+                Progress = 0;
+                for (int i = 0; i < SamplingCount; i++)
+                {
+                    sw.Restart();
+                    HighAccuracyTimer.Sleep(SleepTime);
+                    list.Add(sw.Elapsed.TotalMilliseconds);
+                    Progress = (i + 1) * 100 / SamplingCount;
+                }
+                IsRunning = false;
+                var errorList = list.Where(x => Math.Abs(x - SleepTime) > OffsetTime);
+                if (!errorList.Any())
+                {
+                    MessageBox.Success($"全部通过测试，平均耗时：{Math.Round(list.Average(), 1)}ms");
+                }
+                else
+                {
+                    var top10 = errorList.OrderByDescending(x => x).Take(10).Select(x => Math.Round(x, 1));
+                    MessageBox.Error($"异常个数：{errorList.Count()}，平均耗时：{Math.Round(list.Average(), 1)}ms，前10个异常时间：{string.Join(",", top10)}");
+                }
+
+            });
+        }
+
+        private void MixedSleep()
+        {
+            WinAPI.NtSetTimerResolution(5000, true, out _);
+            Stopwatch sw = Stopwatch.StartNew();
+            List<double> list = new List<double>();
+            Task.Run(() =>
+            {
+                IsRunning = true;
+                Progress = 0;
+                for (int i = 0; i < SamplingCount; i++)
+                {
+                    sw.Restart();
+                    HighAccuracyTimer.MixedSleep(SleepTime);
+                    list.Add(sw.Elapsed.TotalMilliseconds);
+                    Progress = (i + 1) * 100 / SamplingCount;
+                }
+                IsRunning = false;
+                var errorList = list.Where(x => Math.Abs(x - SleepTime) > OffsetTime);
+                if (!errorList.Any())
+                {
+                    MessageBox.Success($"全部通过测试，平均耗时：{Math.Round(list.Average(), 1)}ms");
+                }
+                else
+                {
+                    var top10 = errorList.OrderByDescending(x => x).Take(10).Select(x => Math.Round(x, 1));
+                    MessageBox.Error($"异常个数：{errorList.Count()}，平均耗时：{Math.Round(list.Average(), 1)}ms，前10个异常时间：{string.Join(",", top10)}");
+                }
+
+            });
+            WinAPI.NtSetTimerResolution(0, true, out _);
+        }
+        private void AddThread()
+        {
+            isKeepThreadAlive = true;
+            Task.Run(() =>
+            {
+                threadCount++;
+                ThreadInfo = $"新增线程数量：{threadCount}";
+                while (isKeepThreadAlive)
+                {
+
+                }
+            });
+        }
+        private void DisposeThread()
+        {
+            isKeepThreadAlive = false;
+            threadCount = 0;
+            ThreadInfo = "";
         }
 
         #endregion

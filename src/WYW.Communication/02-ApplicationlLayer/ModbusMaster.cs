@@ -614,7 +614,10 @@ namespace WYW.Communication
                         }
                         break;
                 }
-                Thread.Sleep(1);
+                if (!IsHighAccuracyTimer)
+                {
+                    Thread.Sleep(1);
+                }
             }
 
             return false;

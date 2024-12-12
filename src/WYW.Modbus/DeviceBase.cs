@@ -76,14 +76,24 @@ namespace WYW.Modbus
         public bool LogEnabled
         {
             get { return logEnabled; }
-            set { logEnabled = value; }
+            set
+            {
+                logEnabled = value;
+            }
         }
         private string logFolder = "Log\\Device";
 
         /// <summary>
         /// 日志文件夹，默认值为“Log\\Device”
         /// </summary>
-        public string LogFolder { get => logFolder; set => SetProperty(ref logFolder, value); }
+        public string LogFolder
+        {
+            get => logFolder;
+            set
+            {
+                SetProperty(ref logFolder, value);
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -103,26 +113,34 @@ namespace WYW.Modbus
 
         private Logger logger;
 
-        public Logger Logger 
+        public Logger Logger
         {
-            get 
-            { 
+            get
+            {
                 if (logger == null)
                 {
                     logger = GetLogger();
                 }
-                return logger; 
+                return logger;
             }
         }
         /// <summary>
         /// 是否是高精度时钟模式
         /// </summary>
         public bool IsHighAccuracyTimer { get; set; }
+        /// <summary>
+        /// 日志保留的时长
+        /// </summary>
+        public int LogKeepDays { get; set; } = 90;
         #endregion
 
         #region 公共方法
         public virtual void Open()
         {
+            if (LogEnabled && Client != null)
+            {
+                Client.Logger = Logger;
+            }
             if (!IsDebugMode)
             {
                 Client?.Open();
@@ -174,7 +192,7 @@ namespace WYW.Modbus
             while (isKeepHeartbeatTheadAlive)
             {
                 Thread.Sleep(200);
-                if (!Heartbeat.IsEnabled || Heartbeat.Content==null)
+                if (!Heartbeat.IsEnabled || Heartbeat.Content == null)
                 {
                     IsConnected = Client.IsEstablished;
                     continue;
@@ -213,7 +231,7 @@ namespace WYW.Modbus
             // 2 每个文件限制10M
             // 3 最多保存60天的日志
             string logFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", GetLogFolder());
-            TimeSpan keepLogTime = new TimeSpan(60, 0, 0, 0);
+            TimeSpan keepLogTime = new TimeSpan(LogKeepDays, 0, 0, 0);
             string serilogOutputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] {Message:lj}{NewLine}{Exception}";
             return new LoggerConfiguration()
                                      .MinimumLevel.Debug()

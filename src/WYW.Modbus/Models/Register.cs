@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -17,16 +18,19 @@ namespace WYW.Modbus
         }
         public Register(int address)
         {
-            Address = address;
+            this.address = address;
+            this.addressChar = $"0x{address:X2}";
         }
         public Register(int address, int value)
         {
-            Address = address;
+            this.address = address;
+            this.addressChar = $"0x{address:X2}";
             Value = value.ToString();
         }
         public Register(int address, int value, RegisterType registerType)
         {
-            Address = address;
+            this.address = address;
+            this.addressChar = $"0x{address:X2}";
             Value = value.ToString();
             RegisterType = registerType;
         }
@@ -44,16 +48,45 @@ namespace WYW.Modbus
         private string unit;
         private int registerCount = 1;
         private OperationType operationType= OperationType.Read;
- 
+        private string addressChar;
         /// <summary>
         /// 地址
         /// </summary>
         public int Address
         {
             get => address;
-            set => SetProperty(ref address, value);
+            private set => SetProperty(ref address, value);
         }
 
+        /// <summary>
+        /// Address的字符形式
+        /// </summary>
+        public string AddressChar
+        {
+            get => addressChar;
+            set
+            {
+                SetProperty(ref addressChar, value);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    try
+                    {
+                        if (value.ToLower().StartsWith("0x"))
+                        {
+                            Address = Convert.ToInt32(value, 16);
+                        }
+                        else
+                        {
+                            Address = Convert.ToInt32(value, 10);
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                }
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -198,9 +231,6 @@ namespace WYW.Modbus
 
 
         #endregion
-
-
-
 
         #region 公共方法
         /// <summary>

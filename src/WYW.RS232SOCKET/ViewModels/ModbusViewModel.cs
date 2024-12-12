@@ -122,8 +122,9 @@ namespace WYW.RS232SOCKET.ViewModels
         }
         private void AddRegister()
         {
-            var address = Controller.RegisterCollection.LastOrDefault()?.Address;
-            Controller.RegisterCollection.Add(new Register(address.HasValue ? address.Value + 1 : 0));
+            var address = Controller.RegisterCollection.LastOrDefault()?.Address+1??1;
+
+            Controller.RegisterCollection.Add(new Register(address));
         }
         private void DeleteRegister()
         {

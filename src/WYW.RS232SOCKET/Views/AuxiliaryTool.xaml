@@ -34,6 +34,38 @@
                         </StackPanel>
 
                     </Expander>
+                    <Expander Header="休眠检测" Margin="0,0,0,20"  IsExpanded="False">
+                        <StackPanel IsEnabled="{Binding IsRunning,Converter={StaticResource ReverseConverter}}">
+                            <TextBox wyw:TextBoxElement.Title="休眠时间(ms)" Text="{Binding SleepTime}"/>
+                            <TextBox wyw:TextBoxElement.Title="允许误差(ms)" Text="{Binding OffsetTime}"/>
+                            <TextBox wyw:TextBoxElement.Title="样本数量" Text="{Binding SamplingCount}"/>
+                            <TextBox wyw:TextBoxElement.Title="线程信息" IsReadOnly="True" Text="{Binding ThreadInfo}"/>
+                            <Grid Height="120" Margin="0,10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition Height="20"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="0.2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="0.2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="0.2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="正常Sleep"  Command="{Binding NormalSleepCommand}"/>
+                                <Button Grid.Column="2" Content="高精度Sleep" Command="{Binding HiggAccuracySleepCommand}"/>
+                                <Button Grid.Column="4" Content="CPU计时" Command="{Binding CpuSleepCommand}"/>
+                                <Button Grid.Column="6" Content="混合计时" Command="{Binding MixedSleepCommand}"/>
+                                <Button Grid.Row="3" Grid.Column="0" Content="新增线程" Command="{Binding AddThreadCommand}"/>
+                                <Button  Grid.Row="3" Grid.Column="4" Content="销毁线程" Command="{Binding DisposeThreadCommand}"/>
+                                <wyw:CircleProgressBar Grid.Row="3" Grid.Column="2" RingThickness="2" Value="{Binding Progress}"/>
+                            </Grid>
+                        </StackPanel>
+
+                    </Expander>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <Expander Header="IP扫描" Margin="0,0,0,20"  IsExpanded="False">

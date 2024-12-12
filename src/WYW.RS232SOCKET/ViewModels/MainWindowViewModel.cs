@@ -24,6 +24,7 @@ namespace WYW.RS232SOCKET.ViewModels
             ProtocolConvertViewModel = new ProtocolConvertViewModel();
             NormalScriptViewModel = new NormalScriptViewModel();
             ModbusScriptViewModel=new ModbusScriptViewModel();
+            NumberConvertViewModel=new NumberConvertViewModel();
         }
 
         #region 属性
@@ -35,6 +36,7 @@ namespace WYW.RS232SOCKET.ViewModels
         public NormalScriptViewModel NormalScriptViewModel { get; }
 
         public ModbusScriptViewModel ModbusScriptViewModel { get; }
+        public NumberConvertViewModel NumberConvertViewModel { get; }
         #endregion
 
         #region 命令
@@ -59,6 +61,7 @@ namespace WYW.RS232SOCKET.ViewModels
             try
             {
                 Controller.Open();
+                Controller.Device.IsHighAccuracyTimer = Controller.IsHighAccuracyTimer;
             }
             catch (Exception ex)
             {

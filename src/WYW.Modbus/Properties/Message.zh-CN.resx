@@ -120,6 +120,9 @@
   <data name="ArrayLengthNotOdd" xml:space="preserve">
     <value>数组长度不是偶数</value>
   </data>
+  <data name="CommunicationError" xml:space="preserve">
+    <value>接收指令与发送指令功能码不匹配，可能通讯被干扰</value>
+  </data>
   <data name="CommunicationTimeout" xml:space="preserve">
     <value>通讯超时</value>
   </data>

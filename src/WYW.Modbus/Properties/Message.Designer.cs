@@ -70,6 +70,15 @@ namespace WYW.Modbus.Properties {
         }
         
         /// <summary>
+        ///   查找类似 The function codes for receiving and sending do not match. Maybe the communication is disturbed. 的本地化字符串。
+        /// </summary>
+        public static string CommunicationError {
+            get {
+                return ResourceManager.GetString("CommunicationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Communication timeout 的本地化字符串。
         /// </summary>
         public static string CommunicationTimeout {

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Windows;
 using WYW.Communication;
 using WYW.Communication.Models;
@@ -76,6 +77,14 @@ namespace WYW.RS232SOCKET.Models
             get => protocolType;
             set => SetProperty(ref protocolType, value);
         }
+
+        private bool isHighAccuracyTimer;
+
+        /// <summary>
+        /// 高精度模式
+        /// </summary>
+        public bool IsHighAccuracyTimer { get => isHighAccuracyTimer; set => SetProperty(ref isHighAccuracyTimer, value); }
+
         #endregion
 
         #region 实时显示
@@ -529,6 +538,7 @@ namespace WYW.RS232SOCKET.Models
             {
                 Device = new Device(client);
             }
+          Device.IsHighAccuracyTimer = true;
         }
 
         #endregion

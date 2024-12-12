@@ -9,7 +9,7 @@ namespace WYW.Modbus.Protocols
     /// <summary>
     /// 协议基类
     /// </summary>
- public   abstract class ProtocolBase
+    public abstract class ProtocolBase
     {
         #region  属性
         /// <summary>
@@ -27,29 +27,29 @@ namespace WYW.Modbus.Protocols
         /// <summary>
         /// 创建时间
         /// </summary>
-        public DateTime CreateTime { get; internal set; } =DateTime.Now;
+        public DateTime CreateTime { get; internal set; } = DateTime.Now;
         #endregion
 
         #region  内部成员
         /// <summary>
         /// 指令的标识符，用于验证发送的指令与接收的指令是否匹配，如果为null，则表示接收到了异常帧
         /// </summary>
-        internal string Tag { get; set; }=String.Empty;
+        internal string Tag { get; set; } = String.Empty;
 
         internal abstract int MinLength { get; }
         internal abstract List<ProtocolBase> GetResponse(List<byte> buffer);
         /// <summary>
         /// 比较两个对象的标识符是否一致
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="receive"></param>
         /// <returns></returns>
-        internal  bool IsMatch(ProtocolBase obj)
+        internal virtual bool IsMatch(ProtocolBase receive)
         {
-            if (obj.Tag==null)
+            if (receive.Tag == null)
             {
                 return true;
             }
-            if (Tag==obj.Tag)
+            if (Tag == receive.Tag)
             {
                 return true;
             }

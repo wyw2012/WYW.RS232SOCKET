@@ -44,9 +44,8 @@ namespace WYW.RS232SOCKET.ViewModels
 
         protected override void BindingCommand()
         {
-          ConvertToHexCommand=new RelayCommand(ConvertToHex);
+            ConvertToHexCommand = new RelayCommand(ConvertToHex);
             ConvertToStringCommand = new RelayCommand(ConvertToString);
-
         }
         public RelayCommand ConvertToHexCommand { get; private set; }
 

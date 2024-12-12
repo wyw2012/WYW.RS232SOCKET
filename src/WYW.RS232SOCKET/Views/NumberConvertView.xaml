@@ -1,0 +1,57 @@
+﻿<UserControl x:Class="WYW.RS232SOCKET.Views.NumberConvertView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WYW.RS232SOCKET.Views"
+             mc:Ignorable="d" 
+              xmlns:wyw="http://wangyanwei.com/ui"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="20" DataContext="{Binding NumberConvertViewModel}" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="0.5*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Border BorderThickness="1">
+
+        </Border>
+        <DataGrid ItemsSource="{Binding Items}"  CanUserSortColumns="True" SelectedIndex="{Binding SelectedIndex }">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="序号"  Width="*" 
+                            Binding="{Binding ID,UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridComboBoxColumn Header="值类型"  Width="*" 
+                            ItemsSource="{Binding Source={StaticResource RegisterValueTypeCollection} }" 
+                            EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                            SelectedItemBinding="{Binding ValueType,UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridComboBoxColumn Header="对齐方式"  Width="*" 
+                            ItemsSource="{Binding Source={StaticResource EndianTypeCollection} }" 
+                            EditingElementStyle="{StaticResource DataGridComboBoxEditStyle}"  
+                            SelectedItemBinding="{Binding EndianType,UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTextColumn Width="1.5*" Header="值" Binding="{Binding Value}"/>
+
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu >
+                    <MenuItem Header="新增"  Command="{Binding AddCommand}"/>
+                    <MenuItem Header="删除"  Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+        <TextBox Grid.Row="1" Grid.Column="2" VerticalContentAlignment="Top" Margin="0,20,0,0"
+                 Text="{Binding HexText}"/>
+        <Grid Grid.Row="1" Grid.Column="1" Margin="20,20,20,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+            <Button Grid.Row="1" wyw:ButtonElement.IcoGeometry="{StaticResource RightArrowGeometry}" 
+                    Command="{Binding ConvertToHexCommand}"/>
+            <Button Grid.Row="3" wyw:ButtonElement.IcoGeometry="{StaticResource LeftArrowGeometry}"
+                    Command="{Binding ConvertToListCommand}"/>
+        </Grid>
+    </Grid>
+</UserControl>

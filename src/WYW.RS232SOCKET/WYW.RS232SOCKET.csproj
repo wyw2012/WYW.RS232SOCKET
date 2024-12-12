@@ -62,6 +62,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common\ExcelHelper.cs" />
+    <Compile Include="Common\HighAccuracyTimer.cs" />
     <Compile Include="Common\JsonHelper.cs" />
     <Compile Include="Common\ObservableCollectionEx.cs" />
     <Compile Include="Common\WinAPI.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Models\LineGraphModel.cs" />
     <Compile Include="Models\ModbusScriptModel.cs" />
     <Compile Include="Models\NormalScriptModel.cs" />
+    <Compile Include="Models\NumberConvertModel.cs" />
     <Compile Include="MVVMHelper\ObservableObject.cs" />
     <Compile Include="MVVMHelper\RelayCommand.cs" />
     <Compile Include="Enums.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="ViewModels\ModbusViewModel.cs" />
     <Compile Include="ViewModels\ModbusScriptViewModel.cs" />
     <Compile Include="ViewModels\NormalScriptViewModel.cs" />
+    <Compile Include="ViewModels\NumberConvertViewModel.cs" />
     <Compile Include="ViewModels\ProtocolConvertViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\AuxiliaryTool.xaml.cs">
@@ -114,6 +117,9 @@
     </Compile>
     <Compile Include="Views\NormalScript.xaml.cs">
       <DependentUpon>NormalScript.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\NumberConvertView.xaml.cs">
+      <DependentUpon>NumberConvertView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ProtocolConvertView.xaml.cs">
       <DependentUpon>ProtocolConvertView.xaml</DependentUpon>
@@ -149,6 +155,10 @@
     <Page Include="Views\NormalScript.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\NumberConvertView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\ProtocolConvertView.xaml">
       <SubType>Designer</SubType>
